@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { getMonthDetailData, MonthDetailData } from '@/lib/actions/dashboard'
@@ -78,6 +80,130 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
     XLSX.writeFile(workbook, `extrato-${month}.xlsx`)
   }
 
+  const downloadPDF = () => {
+    if (!data) return
+
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    })
+
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+
+    // Cores simples
+    const darkGray: [number, number, number] = [51, 51, 51]
+    const mediumGray: [number, number, number] = [128, 128, 128]
+    const lightGray: [number, number, number] = [245, 245, 245]
+
+    // Formatação do mês
+    const [ano, mes] = month.split('-')
+    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+    const mesFormatado = `${meses[parseInt(mes) - 1]} de ${ano}`
+
+    // Título simples
+    doc.setTextColor(...darkGray)
+    doc.setFontSize(22)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Extrato Financeiro', 15, 20)
+
+    // Linha separadora
+    doc.setDrawColor(200, 200, 200)
+    doc.setLineWidth(0.5)
+    doc.line(15, 25, pageWidth - 15, 25)
+
+    // Subtítulo
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...mediumGray)
+    doc.text(mesFormatado, 15, 33)
+    doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, pageWidth - 15, 33, { align: 'right' })
+
+    // Resumo em linha simples
+    doc.setFontSize(10)
+    doc.setTextColor(...darkGray)
+    const resumoY = 45
+    
+    doc.setFont('helvetica', 'normal')
+    doc.text('Entradas:', 15, resumoY)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(34, 139, 34) // Verde escuro
+    doc.text(`+ ${formatCurrency(totalEntradas.toString())}`, 40, resumoY)
+
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...darkGray)
+    doc.text('Saídas:', 85, resumoY)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(178, 34, 34) // Vermelho escuro
+    doc.text(`- ${formatCurrency(totalSaidas.toString())}`, 105, resumoY)
+
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...darkGray)
+    doc.text('Saldo:', 155, resumoY)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(data.summary.balance >= 0 ? 34 : 178, data.summary.balance >= 0 ? 139 : 34, data.summary.balance >= 0 ? 34 : 34)
+    doc.text(`${data.summary.balance >= 0 ? '+' : '-'} ${formatCurrency(Math.abs(data.summary.balance).toString())}`, 173, resumoY)
+
+    // Tabela de transações - estilo clean
+    const tableData = data.rows.map(row => [
+      formatDate(row.date),
+      row.description,
+      row.category,
+      row.amount > 0 ? formatCurrency(row.amount.toString()) : '',
+      row.amount < 0 ? formatCurrency(Math.abs(row.amount).toString()) : ''
+    ])
+
+    autoTable(doc, {
+      startY: 55,
+      head: [['Data', 'Descrição', 'Categoria', 'Entrada', 'Saída']],
+      body: tableData,
+      theme: 'plain',
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: darkGray,
+        fontStyle: 'bold',
+        fontSize: 9,
+        cellPadding: 4,
+        lineWidth: 0.1,
+        lineColor: [200, 200, 200]
+      },
+      bodyStyles: {
+        textColor: [80, 80, 80],
+        fontSize: 9,
+        cellPadding: 3,
+        lineWidth: 0.1,
+        lineColor: [230, 230, 230]
+      },
+      columnStyles: {
+        0: { cellWidth: 22, halign: 'center' },
+        1: { cellWidth: 110 },
+        2: { cellWidth: 35, halign: 'center' },
+        3: { cellWidth: 30, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' }
+      },
+      margin: { left: 15, right: 15 },
+      didParseCell: function(data) {
+        if (data.section === 'body') {
+          if (data.column.index === 3 && data.cell.raw) {
+            data.cell.styles.textColor = [34, 139, 34]
+          }
+          if (data.column.index === 4 && data.cell.raw) {
+            data.cell.styles.textColor = [178, 34, 34]
+          }
+        }
+      }
+    })
+
+    // Footer discreto
+    doc.setTextColor(...mediumGray)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Atena Gestão', pageWidth / 2, pageHeight - 10, { align: 'center' })
+
+    doc.save(`extrato-${month}.pdf`)
+  }
+
   if (loading) {
     return (
       <Card>
@@ -112,15 +238,23 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Extrato do Mês</h2>
-          <p className="text-sm text-gray-500">{data.rows.length} transações</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Extrato do Mês</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{data.rows.length} transações</p>
         </div>
-        <Button variant="secondary" onClick={downloadExcel}>
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Baixar Excel
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={downloadExcel}>
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Excel
+          </Button>
+          <Button variant="primary" onClick={downloadPDF}>
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            PDF
+          </Button>
+        </div>
       </div>
 
       {/* Visual Summary - Entradas vs Saídas */}

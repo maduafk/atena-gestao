@@ -23,7 +23,6 @@ export default function ExportLoansButton({ month, borrowerName }: ExportLoansBu
     try {
       const data = await exportLoansByBorrower(borrowerName, month)
       
-      // Criar PDF em landscape
       const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -33,32 +32,30 @@ export default function ExportLoansButton({ month, borrowerName }: ExportLoansBu
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
 
-      // Cores do tema
-      const primaryColor: [number, number, number] = [79, 70, 229] // Indigo-600
-      const grayColor: [number, number, number] = [107, 114, 128]
-      const darkColor: [number, number, number] = [31, 41, 55]
+      // Cores simples
+      const darkGray: [number, number, number] = [51, 51, 51]
+      const mediumGray: [number, number, number] = [128, 128, 128]
 
-      // Header com fundo colorido
-      doc.setFillColor(...primaryColor)
-      doc.rect(0, 0, pageWidth, 35, 'F')
-
-      // Título
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(24)
+      // Título simples
+      doc.setTextColor(...darkGray)
+      doc.setFontSize(22)
       doc.setFont('helvetica', 'bold')
-      doc.text('Relatório de Empréstimos', 15, 18)
+      doc.text('Relatório de Empréstimos', 15, 20)
 
-      // Subtítulo
-      doc.setFontSize(14)
+      // Linha separadora
+      doc.setDrawColor(200, 200, 200)
+      doc.setLineWidth(0.5)
+      doc.line(15, 25, pageWidth - 15, 25)
+
+      // Info
+      doc.setFontSize(11)
       doc.setFont('helvetica', 'normal')
-      doc.text(data.borrowerName.toUpperCase(), 15, 28)
-
-      // Info no canto direito do header
+      doc.setTextColor(...mediumGray)
+      doc.text(data.borrowerName, 15, 33)
       doc.setFontSize(10)
-      doc.text(`Referência: ${data.statementMonth}`, pageWidth - 15, 18, { align: 'right' })
-      doc.text(`Gerado em: ${data.generatedAt}`, pageWidth - 15, 25, { align: 'right' })
+      doc.text(`Referência: ${data.statementMonth}  •  Gerado em ${data.generatedAt}`, pageWidth - 15, 33, { align: 'right' })
 
-      // Tabela de dados
+      // Tabela de dados - estilo clean
       const tableData = data.rows.map(row => [
         row.descricao,
         row.cartao,
@@ -70,97 +67,76 @@ export default function ExportLoansButton({ month, borrowerName }: ExportLoansBu
       ])
 
       autoTable(doc, {
-        startY: 45,
+        startY: 42,
         head: [[
           'Descrição',
           'Cartão',
           'Valor Total',
-          'Valor Restante',
+          'A Receber',
           'Parcela',
           'Valor Parcela',
           'Status'
         ]],
         body: tableData,
-        theme: 'grid',
+        theme: 'plain',
         headStyles: {
-          fillColor: primaryColor,
-          textColor: [255, 255, 255],
+          fillColor: [255, 255, 255],
+          textColor: darkGray,
           fontStyle: 'bold',
-          halign: 'center',
-          fontSize: 10
+          fontSize: 9,
+          cellPadding: 4,
+          lineWidth: 0.1,
+          lineColor: [200, 200, 200]
         },
         bodyStyles: {
-          textColor: darkColor,
+          textColor: [80, 80, 80],
           fontSize: 9,
-          cellPadding: 4
-        },
-        alternateRowStyles: {
-          fillColor: [249, 250, 251]
+          cellPadding: 3,
+          lineWidth: 0.1,
+          lineColor: [230, 230, 230]
         },
         columnStyles: {
-          0: { cellWidth: 60 },
+          0: { cellWidth: 70 },
           1: { cellWidth: 35, halign: 'center' },
-          2: { cellWidth: 35, halign: 'right' },
-          3: { cellWidth: 35, halign: 'right' },
-          4: { cellWidth: 25, halign: 'center' },
-          5: { cellWidth: 35, halign: 'right' },
-          6: { cellWidth: 30, halign: 'center' }
+          2: { cellWidth: 30, halign: 'right' },
+          3: { cellWidth: 30, halign: 'right' },
+          4: { cellWidth: 22, halign: 'center' },
+          5: { cellWidth: 30, halign: 'right' },
+          6: { cellWidth: 25, halign: 'center' }
         },
         margin: { left: 15, right: 15 }
       })
 
       // Pegar posição Y após a tabela
-      const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
+      const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15
 
-      // Box de resumo
-      const boxWidth = 100
-      const boxX = pageWidth - boxWidth - 15
-      
-      doc.setFillColor(249, 250, 251)
-      doc.setDrawColor(...primaryColor)
-      doc.setLineWidth(0.5)
-      doc.roundedRect(boxX, finalY, boxWidth, 45, 3, 3, 'FD')
-
-      // Título do resumo
-      doc.setFillColor(...primaryColor)
-      doc.roundedRect(boxX, finalY, boxWidth, 10, 3, 3, 'F')
-      doc.rect(boxX, finalY + 7, boxWidth, 3, 'F') // Cobrir cantos inferiores
-      
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(11)
-      doc.setFont('helvetica', 'bold')
-      doc.text('RESUMO', boxX + boxWidth / 2, finalY + 7, { align: 'center' })
-
-      // Valores do resumo
-      doc.setTextColor(...darkColor)
+      // Resumo simples em linha
       doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      
-      const resumeStartY = finalY + 18
-      doc.text('Total Emprestado:', boxX + 5, resumeStartY)
-      doc.setFont('helvetica', 'bold')
-      doc.text(formatCurrency(data.totals.totalGeral), boxX + boxWidth - 5, resumeStartY, { align: 'right' })
+      doc.setTextColor(...darkGray)
       
       doc.setFont('helvetica', 'normal')
-      doc.text('A Receber:', boxX + 5, resumeStartY + 10)
+      doc.text('Total Emprestado:', 15, finalY)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(16, 185, 129) // Verde
-      doc.text(formatCurrency(data.totals.totalRestante), boxX + boxWidth - 5, resumeStartY + 10, { align: 'right' })
-      
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(...darkColor)
-      doc.text('Valor Este Mês:', boxX + 5, resumeStartY + 20)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(...primaryColor)
-      doc.text(formatCurrency(data.totals.totalMes), boxX + boxWidth - 5, resumeStartY + 20, { align: 'right' })
+      doc.text(formatCurrency(data.totals.totalGeral), 55, finalY)
 
-      // Footer
-      doc.setTextColor(...grayColor)
+      doc.setFont('helvetica', 'normal')
+      doc.text('A Receber:', 100, finalY)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(34, 139, 34)
+      doc.text(formatCurrency(data.totals.totalRestante), 130, finalY)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...darkGray)
+      doc.text('Este Mês:', 175, finalY)
+      doc.setFont('helvetica', 'bold')
+      doc.text(formatCurrency(data.totals.totalMes), 200, finalY)
+
+      // Footer discreto
+      doc.setTextColor(...mediumGray)
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
-      doc.text('Atena Gestão - Sistema de Controle Financeiro', pageWidth / 2, pageHeight - 10, { align: 'center' })
+      doc.text('Atena Gestão', pageWidth / 2, pageHeight - 10, { align: 'center' })
 
-      // Salvar PDF
       const fileName = `emprestimos_${borrowerName.toLowerCase().replace(/\s+/g, '_')}_${month}.pdf`
       doc.save(fileName)
       
