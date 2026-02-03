@@ -1,0 +1,48 @@
+{
+  "name": "atena-gestao",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "db:backup": "wsl bash ./scripts/backup.sh",
+    "db:restore": "wsl bash ./scripts/restore.sh",
+    "dev:setup": "npm run db:up && timeout 5 && npm run db:migrate && npm run db:seed && npm run dev"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
+    "@prisma/client": "^5.14.0",
+    "autoprefixer": "^10.4.23",
+    "bcryptjs": "^2.4.3",
+    "decimal.js": "^10.4.3",
+    "jose": "^5.2.4",
+    "next": "14.2.3",
+    "nodemailer": "^7.0.13",
+    "react": "^18",
+    "react-dom": "^18",
+    "resend": "^6.9.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "prisma": "^5.14.0",
+    "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}

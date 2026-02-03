@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String                  @id @default(uuid()) @db.Uuid
+  email                  String                  @unique
+  passwordHash           String                  @map("password_hash")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  isActive               Boolean                 @default(true) @map("is_active")
+  isAdmin                Boolean                 @default(false) @map("is_admin")
+  mustChangePassword     Boolean                 @default(true) @map("must_change_password")
+  cardInstallments       CardInstallment[]
+  cardLoans              CardLoan[]
+  cardPaymentAllocations CardPaymentAllocation[]
+  cardPayments           CardPayment[]
+  cardPurchases          CardPurchase[]
+  cards                  Card[]
+  debitTransactions      DebitTransaction[]
+  incomeTransactions     IncomeTransaction[]
+  loginCodes             LoginCode[]
+  settings               UserSettings?
+
+  @@map("users")
+}
+
+model LoginCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  code      String
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@map("login_codes")
+}
+
+model UserSettings {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  enableLoans Boolean  @default(false) @map("enable_loans")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model Card {
+  id           String            @id @default(uuid()) @db.Uuid
+  userId       String            @map("user_id") @db.Uuid
+  name         String
+  creditLimit  Decimal           @map("credit_limit") @db.Decimal(12, 2)
+  closingDay   Int               @map("closing_day")
+  dueDay       Int               @map("due_day")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  installments CardInstallment[]
+  loans        CardLoan[]
+  payments     CardPayment[]
+  purchases    CardPurchase[]
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("cards")
+}
+
+model CardPurchase {
+  id               String            @id @default(uuid()) @db.Uuid
+  userId           String            @map("user_id") @db.Uuid
+  cardId           String            @map("card_id") @db.Uuid
+  description      String
+  amountTotal      Decimal           @map("amount_total") @db.Decimal(12, 2)
+  purchaseDate     DateTime          @map("purchase_date") @db.Date
+  installments     Int
+  createdAt        DateTime          @default(now()) @map("created_at")
+  cardInstallments CardInstallment[]
+  card             Card              @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([cardId])
+  @@index([purchaseDate])
+  @@map("card_purchases")
+}
+
+model CardInstallment {
+  id                String                  @id @default(uuid()) @db.Uuid
+  userId            String                  @map("user_id") @db.Uuid
+  cardId            String                  @map("card_id") @db.Uuid
+  purchaseId        String                  @map("purchase_id") @db.Uuid
+  installmentNumber Int                     @map("installment_number")
+  amount            Decimal                 @db.Decimal(12, 2)
+  statementMonth    DateTime                @map("statement_month") @db.Date
+  status            InstallmentStatus       @default(open)
+  createdAt         DateTime                @default(now()) @map("created_at")
+  card              Card                    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  purchase          CardPurchase            @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  user              User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allocations       CardPaymentAllocation[]
+
+  @@unique([purchaseId, installmentNumber])
+  @@index([userId])
+  @@index([cardId])
+  @@index([statementMonth])
+  @@map("card_installments")
+}
+
+model CardPayment {
+  id             String                  @id @default(uuid()) @db.Uuid
+  userId         String                  @map("user_id") @db.Uuid
+  cardId         String                  @map("card_id") @db.Uuid
+  statementMonth DateTime                @map("statement_month") @db.Date
+  paymentDate    DateTime                @default(now()) @map("payment_date") @db.Date
+  amount         Decimal                 @db.Decimal(12, 2)
+  method         String                  @default("other")
+  note           String?
+  createdAt      DateTime                @default(now()) @map("created_at")
+  allocations    CardPaymentAllocation[]
+  card           Card                    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([cardId])
+  @@index([statementMonth])
+  @@map("card_payments")
+}
+
+model CardPaymentAllocation {
+  id            String          @id @default(uuid()) @db.Uuid
+  userId        String          @map("user_id") @db.Uuid
+  paymentId     String          @map("payment_id") @db.Uuid
+  installmentId String          @map("installment_id") @db.Uuid
+  amount        Decimal         @db.Decimal(12, 2)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  installment   CardInstallment @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+  payment       CardPayment     @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, installmentId])
+  @@index([userId])
+  @@index([paymentId])
+  @@index([installmentId])
+  @@map("card_payment_allocations")
+}
+
+model CardLoan {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  cardId       String    @map("card_id") @db.Uuid
+  borrowerName String    @map("borrower_name")
+  description  String
+  amount       Decimal   @db.Decimal(12, 2)
+  loanDate     DateTime  @map("loan_date") @db.Date
+  paidAmount   Decimal   @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  paidAt       DateTime? @map("paid_at")
+  status       String    @default("pending")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  card         Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([cardId])
+  @@index([borrowerName])
+  @@map("card_loans")
+}
+
+model DebitTransaction {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  description String
+  amount      Decimal  @db.Decimal(12, 2)
+  date        DateTime @default(now()) @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@map("debit_transactions")
+}
+
+model IncomeTransaction {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  description String
+  amount      Decimal  @db.Decimal(12, 2)
+  date        DateTime @default(now()) @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@map("income_transactions")
+}
+
+enum InstallmentStatus {
+  open
+  paid
+}

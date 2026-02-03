@@ -1,0 +1,3 @@
+# Ignorar arquivos de backup (são grandes)
+*.sql
+*.sql.gz
