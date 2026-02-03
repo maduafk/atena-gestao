@@ -569,11 +569,23 @@ export interface LoanExportRow {
   status: string
 }
 
+export interface LoanExportData {
+  borrowerName: string
+  statementMonth: string
+  generatedAt: string
+  rows: LoanExportRow[]
+  totals: {
+    totalGeral: string
+    totalRestante: string
+    totalMes: string
+  }
+}
+
 /**
- * Exporta dados de empréstimos de UMA PESSOA específica para CSV/Excel
- * Inclui todos os cartões e o total somado
+ * Exporta dados de empréstimos de UMA PESSOA específica
+ * Retorna dados estruturados para geração de PDF
  */
-export async function exportLoansByBorrower(borrowerName: string, statementMonth: string): Promise<string> {
+export async function exportLoansByBorrower(borrowerName: string, statementMonth: string): Promise<LoanExportData> {
   const session = await verifySession()
   if (!session) throw new Error('Não autorizado')
 
@@ -648,41 +660,16 @@ export async function exportLoansByBorrower(borrowerName: string, statementMonth
     })
   }
 
-  // Gerar CSV
-  const headers = [
-    'Descrição',
-    'Cartão',
-    'Valor Total',
-    'Valor Restante',
-    'Parcela Atual',
-    'Total Parcelas',
-    'Valor da Parcela',
-    'Status',
-  ]
-
-  const csvLines = [
-    `EMPRÉSTIMOS - ${borrowerName.toUpperCase()}`,
-    `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`,
-    `Mês de referência: ${statementMonth}`,
-    '',
-    headers.join(';'),
-    ...rows.map(row => [
-      row.descricao,
-      row.cartao,
-      row.valorTotal.replace('.', ','),
-      row.valorRestante.replace('.', ','),
-      row.parcelaAtual,
-      row.totalParcelas,
-      row.valorParcela.replace('.', ','),
-      row.status,
-    ].join(';')),
-    '',
-    '--- RESUMO ---',
-    `Total Emprestado;${totalGeral.toFixed(2).replace('.', ',')}`,
-    `Total a Receber;${totalRestante.toFixed(2).replace('.', ',')}`,
-    `Valor Este Mês;${totalMes.toFixed(2).replace('.', ',')}`,
-  ]
-
-  // Adicionar BOM para UTF-8 no Excel
-  return '\uFEFF' + csvLines.join('\n')
+  // Gerar dados estruturados para PDF
+  return {
+    borrowerName,
+    statementMonth,
+    generatedAt: new Date().toLocaleDateString('pt-BR'),
+    rows,
+    totals: {
+      totalGeral: totalGeral.toFixed(2),
+      totalRestante: totalRestante.toFixed(2),
+      totalMes: totalMes.toFixed(2),
+    }
+  }
 }
