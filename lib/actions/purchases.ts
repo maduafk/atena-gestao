@@ -98,6 +98,23 @@ export async function createPurchase(data: CreatePurchaseInput) {
     throw new Error(`Valor excede o limite do cartão (R$ ${cardLimit.toFixed(2).replace('.', ',')})`)
   }
 
+  // Calculate base statement month and current statement month
+  const baseStatementMonth = getStatementMonthForPurchase(purchaseDate, card.closingDay)
+  const currentStatementMonth = getStatementMonthForPurchase(new Date(), card.closingDay)
+  
+  // Split amount into installments
+  const installmentAmounts = splitIntoInstallments(amountTotal, data.installments)
+  
+  // Calculate how much of this purchase will be "open" (future installments only)
+  let futureInstallmentsAmount = new DecimalJS(0)
+  for (let i = 0; i < data.installments; i++) {
+    const statementMonth = addMonths(baseStatementMonth, i)
+    // Only count installments from current month onwards
+    if (statementMonth >= currentStatementMonth) {
+      futureInstallmentsAmount = futureInstallmentsAmount.plus(installmentAmounts[i])
+    }
+  }
+
   // Check available limit (limit - open installments)
   const openInstallments = await prisma.cardInstallment.aggregate({
     where: {
@@ -112,15 +129,10 @@ export async function createPurchase(data: CreatePurchaseInput) {
   const usedLimit = new DecimalJS(openInstallments._sum.amount?.toString() || '0')
   const availableLimit = cardLimit.minus(usedLimit)
   
-  if (amountTotal.greaterThan(availableLimit)) {
+  // Only validate against future installments (past ones will be marked as paid)
+  if (futureInstallmentsAmount.greaterThan(availableLimit)) {
     throw new Error(`Limite disponível insuficiente. Disponível: R$ ${availableLimit.toFixed(2).replace('.', ',')}`)
   }
-  
-  // Calculate base statement month
-  const baseStatementMonth = getStatementMonthForPurchase(purchaseDate, card.closingDay)
-  
-  // Split amount into installments
-  const installmentAmounts = splitIntoInstallments(amountTotal, data.installments)
 
   // Create purchase and installments in a transaction
   const purchase = await prisma.$transaction(async (tx) => {
@@ -140,6 +152,9 @@ export async function createPurchase(data: CreatePurchaseInput) {
     for (let i = 0; i < data.installments; i++) {
       const statementMonth = addMonths(baseStatementMonth, i)
       
+      // Parcelas de meses anteriores ao atual são marcadas como pagas automaticamente
+      const isPastInstallment = statementMonth < currentStatementMonth
+      
       await tx.cardInstallment.create({
         data: {
           userId: session.userId,
@@ -148,7 +163,7 @@ export async function createPurchase(data: CreatePurchaseInput) {
           installmentNumber: i + 1,
           amount: new Decimal(installmentAmounts[i].toString()),
           statementMonth,
-          status: 'open',
+          status: isPastInstallment ? 'paid' : 'open',
         },
       })
     }
