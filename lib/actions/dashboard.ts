@@ -639,10 +639,25 @@ export interface LoanExportData {
     totalRestante: string
     totalMes: string
   }
+  // Receivables data
+  receivables: {
+    rows: ReceivableExportRow[]
+    totalPendente: string
+  }
+}
+
+export interface ReceivableExportRow {
+  descricao: string
+  categoria: string
+  valorTotal: string
+  valorPago: string
+  valorRestante: string
+  dataVencimento: string
+  status: string
 }
 
 /**
- * Exporta dados de empréstimos de UMA PESSOA específica
+ * Exporta dados de empréstimos E A RECEBER de UMA PESSOA específica
  * Retorna dados estruturados para geração de PDF
  */
 export async function exportLoansByBorrower(borrowerName: string, statementMonth: string): Promise<LoanExportData> {
@@ -678,7 +693,17 @@ export async function exportLoansByBorrower(borrowerName: string, statementMonth
     },
   })
 
-  // Montar linhas do CSV
+  // Buscar receivables desta pessoa (case insensitive)
+  const receivables = await prisma.receivable.findMany({
+    where: {
+      userId: session.userId,
+      personName: { equals: borrowerName, mode: 'insensitive' },
+      status: { not: 'paid' },
+    },
+    orderBy: { dueDate: 'asc' },
+  })
+
+  // Montar linhas de empréstimos
   const rows: LoanExportRow[] = []
   let totalGeral = new DecimalJS(0)
   let totalRestante = new DecimalJS(0)
@@ -720,6 +745,28 @@ export async function exportLoansByBorrower(borrowerName: string, statementMonth
     })
   }
 
+  // Montar linhas de receivables
+  const receivableRows: ReceivableExportRow[] = []
+  let totalReceivablesPendente = new DecimalJS(0)
+
+  for (const rec of receivables) {
+    const valorTotal = new DecimalJS(rec.amountTotal.toString())
+    const valorPago = new DecimalJS(rec.paidAmount.toString())
+    const valorRestante = valorTotal.minus(valorPago)
+
+    totalReceivablesPendente = totalReceivablesPendente.plus(valorRestante)
+
+    receivableRows.push({
+      descricao: rec.description,
+      categoria: rec.category || '-',
+      valorTotal: valorTotal.toFixed(2),
+      valorPago: valorPago.toFixed(2),
+      valorRestante: valorRestante.toFixed(2),
+      dataVencimento: rec.dueDate ? rec.dueDate.toLocaleDateString('pt-BR') : '-',
+      status: rec.status === 'pending' ? 'Pendente' : rec.status === 'partial' ? 'Parcial' : 'Pago',
+    })
+  }
+
   // Gerar dados estruturados para PDF
   return {
     borrowerName,
@@ -730,6 +777,10 @@ export async function exportLoansByBorrower(borrowerName: string, statementMonth
       totalGeral: totalGeral.toFixed(2),
       totalRestante: totalRestante.toFixed(2),
       totalMes: totalMes.toFixed(2),
+    },
+    receivables: {
+      rows: receivableRows,
+      totalPendente: totalReceivablesPendente.toFixed(2),
     }
   }
 }

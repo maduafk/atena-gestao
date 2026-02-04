@@ -40,7 +40,7 @@ export default function ExportLoansButton({ month, borrowerName }: ExportLoansBu
       doc.setTextColor(...darkGray)
       doc.setFontSize(22)
       doc.setFont('helvetica', 'bold')
-      doc.text('Relatório de Empréstimos', 15, 20)
+      doc.text('Relatório Financeiro', 15, 20)
 
       // Linha separadora
       doc.setDrawColor(200, 200, 200)
@@ -55,81 +55,181 @@ export default function ExportLoansButton({ month, borrowerName }: ExportLoansBu
       doc.setFontSize(10)
       doc.text(`Referência: ${data.statementMonth}  •  Gerado em ${data.generatedAt}`, pageWidth - 15, 33, { align: 'right' })
 
-      // Tabela de dados - estilo clean
-      const tableData = data.rows.map(row => [
-        row.descricao,
-        row.cartao,
-        formatCurrency(row.valorTotal),
-        formatCurrency(row.valorRestante),
-        `${row.parcelaAtual}/${row.totalParcelas}`,
-        row.valorParcela !== '-' ? formatCurrency(row.valorParcela) : '-',
-        row.status
-      ])
+      let currentY = 42
 
-      autoTable(doc, {
-        startY: 42,
-        head: [[
-          'Descrição',
-          'Cartão',
-          'Valor Total',
-          'A Receber',
-          'Parcela',
-          'Valor Parcela',
-          'Status'
-        ]],
-        body: tableData,
-        theme: 'plain',
-        headStyles: {
-          fillColor: [255, 255, 255],
-          textColor: darkGray,
-          fontStyle: 'bold',
-          fontSize: 9,
-          cellPadding: 4,
-          lineWidth: 0.1,
-          lineColor: [200, 200, 200]
-        },
-        bodyStyles: {
-          textColor: [80, 80, 80],
-          fontSize: 9,
-          cellPadding: 3,
-          lineWidth: 0.1,
-          lineColor: [230, 230, 230]
-        },
-        columnStyles: {
-          0: { cellWidth: 70 },
-          1: { cellWidth: 35, halign: 'center' },
-          2: { cellWidth: 30, halign: 'right' },
-          3: { cellWidth: 30, halign: 'right' },
-          4: { cellWidth: 22, halign: 'center' },
-          5: { cellWidth: 30, halign: 'right' },
-          6: { cellWidth: 25, halign: 'center' }
-        },
-        margin: { left: 15, right: 15 }
-      })
+      // === SEÇÃO DE EMPRÉSTIMOS ===
+      if (data.rows.length > 0) {
+        // Subtítulo empréstimos
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...darkGray)
+        doc.text('Empréstimos (Cartão)', 15, currentY)
+        currentY += 8
 
-      // Pegar posição Y após a tabela
-      const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15
+        // Tabela de empréstimos
+        const tableData = data.rows.map(row => [
+          row.descricao,
+          row.cartao,
+          formatCurrency(row.valorTotal),
+          formatCurrency(row.valorRestante),
+          `${row.parcelaAtual}/${row.totalParcelas}`,
+          row.valorParcela !== '-' ? formatCurrency(row.valorParcela) : '-',
+          row.status
+        ])
 
-      // Resumo simples em linha
-      doc.setFontSize(10)
+        autoTable(doc, {
+          startY: currentY,
+          head: [[
+            'Descrição',
+            'Cartão',
+            'Valor Total',
+            'A Receber',
+            'Parcela',
+            'Valor Parcela',
+            'Status'
+          ]],
+          body: tableData,
+          theme: 'plain',
+          headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: darkGray,
+            fontStyle: 'bold',
+            fontSize: 9,
+            cellPadding: 4,
+            lineWidth: 0.1,
+            lineColor: [200, 200, 200]
+          },
+          bodyStyles: {
+            textColor: [80, 80, 80],
+            fontSize: 9,
+            cellPadding: 3,
+            lineWidth: 0.1,
+            lineColor: [230, 230, 230]
+          },
+          columnStyles: {
+            0: { cellWidth: 70 },
+            1: { cellWidth: 35, halign: 'center' },
+            2: { cellWidth: 30, halign: 'right' },
+            3: { cellWidth: 30, halign: 'right' },
+            4: { cellWidth: 22, halign: 'center' },
+            5: { cellWidth: 30, halign: 'right' },
+            6: { cellWidth: 25, halign: 'center' }
+          },
+          margin: { left: 15, right: 15 }
+        })
+
+        currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8
+
+        // Subtotal empréstimos
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(...mediumGray)
+        doc.text(`Empréstimos: ${formatCurrency(data.totals.totalRestante)} a receber  •  Este mês: ${formatCurrency(data.totals.totalMes)}`, 15, currentY)
+        currentY += 15
+      }
+
+      // === SEÇÃO DE OUTROS A RECEBER ===
+      if (data.receivables.rows.length > 0) {
+        // Verificar se precisa de nova página
+        if (currentY > pageHeight - 60) {
+          doc.addPage()
+          currentY = 20
+        }
+
+        // Subtítulo outros a receber
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...darkGray)
+        doc.text('Outros A Receber', 15, currentY)
+        currentY += 8
+
+        // Tabela de receivables
+        const receivableTableData = data.receivables.rows.map(row => [
+          row.descricao,
+          row.categoria,
+          formatCurrency(row.valorTotal),
+          formatCurrency(row.valorPago),
+          formatCurrency(row.valorRestante),
+          row.dataVencimento,
+          row.status
+        ])
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [[
+            'Descrição',
+            'Categoria',
+            'Valor Total',
+            'Pago',
+            'A Receber',
+            'Vencimento',
+            'Status'
+          ]],
+          body: receivableTableData,
+          theme: 'plain',
+          headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: darkGray,
+            fontStyle: 'bold',
+            fontSize: 9,
+            cellPadding: 4,
+            lineWidth: 0.1,
+            lineColor: [200, 200, 200]
+          },
+          bodyStyles: {
+            textColor: [80, 80, 80],
+            fontSize: 9,
+            cellPadding: 3,
+            lineWidth: 0.1,
+            lineColor: [230, 230, 230]
+          },
+          columnStyles: {
+            0: { cellWidth: 70 },
+            1: { cellWidth: 35, halign: 'center' },
+            2: { cellWidth: 30, halign: 'right' },
+            3: { cellWidth: 30, halign: 'right' },
+            4: { cellWidth: 30, halign: 'right' },
+            5: { cellWidth: 28, halign: 'center' },
+            6: { cellWidth: 25, halign: 'center' }
+          },
+          margin: { left: 15, right: 15 }
+        })
+
+        currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8
+
+        // Subtotal outros a receber
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(...mediumGray)
+        doc.text(`Outros a receber: ${formatCurrency(data.receivables.totalPendente)}`, 15, currentY)
+        currentY += 15
+      }
+
+      // === RESUMO TOTAL ===
+      // Calcular total geral
+      const totalEmprestimos = parseFloat(data.totals.totalRestante) || 0
+      const totalOutros = parseFloat(data.receivables.totalPendente) || 0
+      const totalGeral = totalEmprestimos + totalOutros
+
+      // Verificar se precisa de nova página
+      if (currentY > pageHeight - 30) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      // Linha separadora antes do total
+      doc.setDrawColor(200, 200, 200)
+      doc.setLineWidth(0.3)
+      doc.line(15, currentY, pageWidth - 15, currentY)
+      currentY += 8
+
+      // Total geral
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
       doc.setTextColor(...darkGray)
-      
-      doc.setFont('helvetica', 'normal')
-      doc.text('Total Emprestado:', 15, finalY)
-      doc.setFont('helvetica', 'bold')
-      doc.text(formatCurrency(data.totals.totalGeral), 55, finalY)
-
-      doc.setFont('helvetica', 'normal')
-      doc.text('A Receber:', 100, finalY)
-      doc.setFont('helvetica', 'bold')
+      doc.text('TOTAL A RECEBER:', 15, currentY)
       doc.setTextColor(34, 139, 34)
-      doc.text(formatCurrency(data.totals.totalRestante), 130, finalY)
-
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(...darkGray)
-      doc.text('Este Mês:', 175, finalY)
-      doc.setFont('helvetica', 'bold')
-      doc.text(formatCurrency(data.totals.totalMes), 200, finalY)
+      doc.text(formatCurrency(totalGeral.toFixed(2)), 70, currentY)
 
       // Footer discreto
       doc.setTextColor(...mediumGray)
