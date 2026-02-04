@@ -302,17 +302,7 @@ export async function markReceivableAsPaid(receivableId: string) {
   if (!receivable) throw new Error('Recebível não encontrado')
 
   await prisma.$transaction(async (tx) => {
-    // Marcar todas as parcelas como pagas
-    await tx.receivableInstallment.updateMany({
-      where: { receivableId },
-      data: {
-        paidAmount: prisma.receivableInstallment.fields.amount,
-        paidAt: new Date(),
-        status: 'paid',
-      },
-    })
-
-    // Atualizar parcelas individualmente para pegar o amount correto
+    // Buscar todas as parcelas e marcar como pagas
     const installments = await tx.receivableInstallment.findMany({
       where: { receivableId },
     })
