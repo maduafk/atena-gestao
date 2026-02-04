@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { logout } from '@/lib/actions/auth'
 import ThemeToggle from './ThemeToggle'
@@ -26,9 +27,13 @@ export default function Navbar({ isAdmin = false }: NavbarProps) {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <Image 
+              src="/logo.png" 
+              alt="Atena Gestão" 
+              width={36} 
+              height={36}
+              className="rounded-lg"
+            />
             <span className="font-bold text-xl text-gray-900 dark:text-white">Atena</span>
           </Link>
 
