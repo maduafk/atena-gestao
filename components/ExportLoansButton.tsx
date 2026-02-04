@@ -210,6 +210,7 @@ export default function ExportLoansButton({ month, borrowerName }: ExportLoansBu
       const totalEmprestimos = parseFloat(data.totals.totalRestante) || 0
       const totalOutros = parseFloat(data.receivables.totalPendente) || 0
       const totalGeral = totalEmprestimos + totalOutros
+      const totalEsteMes = parseFloat(data.totals.totalMes) || 0
 
       // Verificar se precisa de nova página
       if (currentY > pageHeight - 30) {
@@ -223,13 +224,19 @@ export default function ExportLoansButton({ month, borrowerName }: ExportLoansBu
       doc.line(15, currentY, pageWidth - 15, currentY)
       currentY += 8
 
-      // Total geral
+      // Total geral e Este Mês lado a lado
       doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(...darkGray)
       doc.text('TOTAL A RECEBER:', 15, currentY)
       doc.setTextColor(34, 139, 34)
       doc.text(formatCurrency(totalGeral.toFixed(2)), 70, currentY)
+
+      // Este mês destacado
+      doc.setTextColor(...darkGray)
+      doc.text('ESTE MÊS:', 130, currentY)
+      doc.setTextColor(255, 140, 0) // Laranja
+      doc.text(formatCurrency(totalEsteMes.toFixed(2)), 170, currentY)
 
       // Footer discreto
       doc.setTextColor(...mediumGray)
