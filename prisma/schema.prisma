@@ -63,6 +63,7 @@ model Card {
   creditLimit  Decimal           @map("credit_limit") @db.Decimal(12, 2)
   closingDay   Int               @map("closing_day")
   dueDay       Int               @map("due_day")
+  color        String            @default("#3d8585")
   createdAt    DateTime          @default(now()) @map("created_at")
   installments CardInstallment[]
   loans        CardLoan[]

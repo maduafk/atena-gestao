@@ -415,7 +415,7 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
             </thead>
             <tbody>
               {data.rows.map((row, index) => (
-                <tr key={index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                <tr key={index} className="border-b border-stone-100 dark:border-neutral-800 hover:bg-stone-50 dark:bg-neutral-900 transition-colors">
                   <td className="py-3 px-2 text-gray-600 font-medium">
                     {formatDate(row.date)}
                   </td>
@@ -452,7 +452,7 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-gray-200 bg-gray-50 font-semibold">
+              <tr className="border-t-2 border-gray-200 bg-stone-50 dark:bg-neutral-900 font-semibold">
                 <td colSpan={3} className="py-3 px-2 text-gray-700">
                   TOTAL
                 </td>

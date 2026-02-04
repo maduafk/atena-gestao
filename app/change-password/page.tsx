@@ -67,16 +67,16 @@ export default function ChangePasswordPage() {
 
   if (checkingAccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-neutral-950">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-stone-50 dark:bg-neutral-950 transition-colors">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -84,8 +84,8 @@ export default function ChangePasswordPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trocar Senha</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
+            <h1 className="text-2xl font-bold text-stone-800 dark:text-white">Trocar Senha</h1>
+            <p className="text-stone-500 dark:text-stone-400 mt-2 text-sm">
               Por segurança, você precisa criar uma nova senha antes de continuar.
             </p>
           </div>
@@ -122,7 +122,7 @@ export default function ChangePasswordPage() {
               autoComplete="new-password"
             />
 
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-stone-500 dark:text-stone-400">
               A senha deve ter pelo menos 6 caracteres
             </p>
 

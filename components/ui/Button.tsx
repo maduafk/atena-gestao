@@ -9,18 +9,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = '', variant = 'primary', size = 'md', loading, children, disabled, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
+    const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]'
     
     const variants = {
-      primary: 'bg-primary-600 text-white hover:bg-primary-500 focus:ring-primary-400',
-      secondary: 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:ring-gray-500',
-      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-      ghost: 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:ring-gray-500',
+      primary: 'bg-primary-600 text-white hover:bg-primary-500 focus:ring-primary-400 shadow-sm hover:shadow-md',
+      secondary: 'bg-stone-100 dark:bg-neutral-800 text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-neutral-700 focus:ring-stone-400 border border-stone-200 dark:border-neutral-700',
+      danger: 'bg-rose-600 text-white hover:bg-rose-500 focus:ring-rose-400 shadow-sm hover:shadow-md',
+      ghost: 'bg-transparent text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-neutral-800 focus:ring-stone-400',
     }
 
     const sizes = {
       sm: 'px-3 py-1.5 text-sm',
-      md: 'px-4 py-2 text-sm',
+      md: 'px-4 py-2.5 text-sm',
       lg: 'px-6 py-3 text-base',
     }
 

@@ -48,12 +48,12 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
         <Navbar isAdmin={isAdmin} />
         <main className="max-w-3xl mx-auto px-4 py-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48" />
-            <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-8 bg-gray-200 dark:bg-neutral-800 rounded w-48" />
+            <div className="h-32 bg-gray-200 dark:bg-neutral-800 rounded" />
           </div>
         </main>
       </div>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
       <Navbar isAdmin={isAdmin} />
       <main className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex items-center gap-3 mb-6">
@@ -69,25 +69,25 @@ export default function SettingsPage() {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-600 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Configurações</h1>
+          <h1 className="text-2xl font-bold text-stone-800 dark:text-white">Configurações</h1>
         </div>
 
         <Card title="Funcionalidades" subtitle="Ative ou desative recursos do aplicativo">
           <div className="space-y-4">
             {/* Loans Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-900 rounded-lg">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  <h3 className="font-medium text-gray-900 dark:text-white">Controle de Empréstimos</h3>
+                  <h3 className="font-medium text-stone-800 dark:text-white">Controle de Empréstimos</h3>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
                   Controle valores emprestados do seu cartão para outras pessoas. 
                   Uma aba "Empréstimos" aparecerá nos seus cartões e um resumo no dashboard.
                 </p>
@@ -102,7 +102,7 @@ export default function SettingsPage() {
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     settings?.enableLoans 
                       ? 'bg-primary-600' 
-                      : 'bg-gray-300 dark:bg-gray-600'
+                      : 'bg-stone-300 dark:bg-neutral-600'
                   } ${saving ? 'opacity-50' : ''}`}
                 >
                   <span
@@ -118,10 +118,10 @@ export default function SettingsPage() {
 
         <Card title="Conta" subtitle="Informações da sua conta" className="mt-6">
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-neutral-900 rounded-lg">
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Sair da conta</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <h3 className="font-medium text-stone-800 dark:text-white">Sair da conta</h3>
+                <p className="text-sm text-stone-500 dark:text-stone-400">
                   Encerrar sessão atual
                 </p>
               </div>

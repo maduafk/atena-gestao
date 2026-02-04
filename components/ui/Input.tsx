@@ -10,7 +10,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor={id} className="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2">
             {label}
           </label>
         )}
@@ -18,18 +18,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           id={id}
           className={`
-            block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 
-            text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
-            bg-white dark:bg-gray-700
-            focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500
-            disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed
-            ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+            block w-full rounded-xl border border-stone-200 dark:border-neutral-700 px-4 py-2.5 
+            text-stone-800 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500
+            bg-white dark:bg-neutral-800
+            focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20
+            disabled:bg-stone-50 dark:disabled:bg-neutral-900 disabled:cursor-not-allowed
+            transition-all
+            ${error ? 'border-rose-400 focus:border-rose-400 focus:ring-rose-400/20' : ''}
             ${className}
           `}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">{error}</p>
         )}
       </div>
     )

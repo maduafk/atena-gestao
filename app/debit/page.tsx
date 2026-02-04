@@ -103,7 +103,7 @@ function DebitContent({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Gastos em Débito</h1>
+        <h1 className="text-2xl font-bold text-stone-800">Gastos em Débito</h1>
         <MonthSelector currentMonth={currentMonth} />
       </div>
 
@@ -133,8 +133,8 @@ function DebitContent({ isAdmin }: { isAdmin: boolean }) {
             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma transação</h3>
-            <p className="text-gray-500 mb-4">Adicione sua primeira transação de débito.</p>
+            <h3 className="text-lg font-medium text-stone-800 mb-2">Nenhuma transação</h3>
+            <p className="text-stone-500 mb-4">Adicione sua primeira transação de débito.</p>
             <Button onClick={() => setModalOpen(true)}>Adicionar Transação</Button>
           </div>
         ) : (
@@ -142,7 +142,7 @@ function DebitContent({ isAdmin }: { isAdmin: boolean }) {
             {transactions.map((transaction) => (
               <div 
                 key={transaction.id} 
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group"
+                className="flex items-center justify-between p-3 bg-stone-50 dark:bg-neutral-900 rounded-lg group"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-orange-100 rounded-lg">
@@ -151,8 +151,8 @@ function DebitContent({ isAdmin }: { isAdmin: boolean }) {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{transaction.description}</p>
-                    <p className="text-xs text-gray-500">{formatDateDisplay(transaction.date)}</p>
+                    <p className="font-medium text-stone-800">{transaction.description}</p>
+                    <p className="text-xs text-stone-500">{formatDateDisplay(transaction.date)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ export default function DebitPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-stone-50 dark:bg-neutral-900">
       <Navbar isAdmin={isAdmin} />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Suspense fallback={

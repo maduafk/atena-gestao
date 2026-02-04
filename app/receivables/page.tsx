@@ -166,15 +166,15 @@ export default function ReceivablesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 transition-colors">
       <Navbar isAdmin={isAdmin} />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">A Receber</h1>
-            <p className="text-gray-500 dark:text-gray-400">Valores que pessoas vão te pagar</p>
+            <h1 className="text-2xl font-bold text-stone-800 dark:text-white">A Receber</h1>
+            <p className="text-stone-500 dark:text-stone-400">Valores que pessoas vão te pagar</p>
           </div>
           <Button onClick={() => setCreateModalOpen(true)}>
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +194,7 @@ export default function ReceivablesPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total a Receber</p>
+                <p className="text-sm text-stone-500 dark:text-stone-400">Total a Receber</p>
                 <p className="text-xl font-bold text-green-600 dark:text-green-400">
                   {formatCurrency(totalPending.toString())}
                 </p>
@@ -210,7 +210,7 @@ export default function ReceivablesPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Vence Este Mês</p>
+                <p className="text-sm text-stone-500 dark:text-stone-400">Vence Este Mês</p>
                 <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   {formatCurrency(totalThisMonth.toString())}
                 </p>
@@ -226,7 +226,7 @@ export default function ReceivablesPage() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Pessoas</p>
+                <p className="text-sm text-stone-500 dark:text-stone-400">Pessoas</p>
                 <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
                   {summaryByPerson.length}
                 </p>
@@ -242,7 +242,7 @@ export default function ReceivablesPage() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'byPerson'
                 ? 'bg-primary-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                : 'bg-gray-100 dark:bg-neutral-900 text-gray-700 dark:text-stone-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             Por Pessoa
@@ -252,7 +252,7 @@ export default function ReceivablesPage() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'list'
                 ? 'bg-primary-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                : 'bg-gray-100 dark:bg-neutral-900 text-gray-700 dark:text-stone-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             Lista
@@ -264,7 +264,7 @@ export default function ReceivablesPage() {
           <Card>
             <div className="animate-pulse space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded" />
+                <div key={i} className="h-16 bg-gray-100 dark:bg-neutral-900 rounded" />
               ))}
             </div>
           </Card>
@@ -274,7 +274,7 @@ export default function ReceivablesPage() {
               <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">Nenhum valor a receber</p>
+              <p className="text-stone-500 dark:text-stone-400 mb-4">Nenhum valor a receber</p>
               <Button onClick={() => setCreateModalOpen(true)}>
                 Adicionar primeiro
               </Button>
@@ -287,15 +287,15 @@ export default function ReceivablesPage() {
               <Card key={person.personName} className="overflow-hidden">
                 <button
                   onClick={() => setExpandedPerson(expandedPerson === person.personName ? null : person.personName)}
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-lg">
                       {person.personName.charAt(0).toUpperCase()}
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{person.personName}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <h3 className="font-semibold text-stone-800 dark:text-white">{person.personName}</h3>
+                      <p className="text-sm text-stone-500 dark:text-stone-400">
                         {person.receivableCount} {person.receivableCount === 1 ? 'item' : 'itens'}
                         {person.nextDueDate && (
                           <span className="ml-2">
@@ -310,10 +310,10 @@ export default function ReceivablesPage() {
                       <p className="text-lg font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(person.pendingAmount)}
                       </p>
-                      <p className="text-xs text-gray-500">a receber</p>
+                      <p className="text-xs text-stone-500">a receber</p>
                     </div>
                     <svg 
-                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedPerson === person.personName ? 'rotate-180' : ''}`} 
+                      className={`w-5 h-5 text-stone-400 transition-transform ${expandedPerson === person.personName ? 'rotate-180' : ''}`} 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -325,14 +325,14 @@ export default function ReceivablesPage() {
 
                 {/* Expanded content */}
                 {expandedPerson === person.personName && (
-                  <div className="border-t border-gray-100 dark:border-gray-800 px-4 pb-4">
+                  <div className="border-t border-stone-100 dark:border-neutral-800 px-4 pb-4">
                     {getReceivablesForPerson(person.personName).map((receivable) => (
-                      <div key={receivable.id} className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                      <div key={receivable.id} className="mt-4 p-4 bg-gray-50 dark:bg-neutral-900/50 rounded-lg">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h4 className="font-medium text-gray-900 dark:text-white">{receivable.description}</h4>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs mr-2">
+                            <h4 className="font-medium text-stone-800 dark:text-white">{receivable.description}</h4>
+                            <p className="text-sm text-stone-500 dark:text-stone-400">
+                              <span className="inline-block px-2 py-0.5 bg-gray-200 dark:bg-neutral-800 rounded text-xs mr-2">
                                 {receivable.category}
                               </span>
                               {receivable.installments > 1 && `${receivable.installments}x de ${formatCurrency((Number(receivable.amountTotal) / receivable.installments).toString())}`}
@@ -370,16 +370,16 @@ export default function ReceivablesPage() {
                                   ? 'bg-green-50 dark:bg-green-900/20' 
                                   : new Date(inst.dueDate) < new Date() 
                                     ? 'bg-red-50 dark:bg-red-900/20'
-                                    : 'bg-white dark:bg-gray-700'
+                                    : 'bg-white dark:bg-neutral-800'
                               }`}
                             >
                               <div className="flex items-center gap-3">
                                 <span className={`text-sm font-medium ${
-                                  inst.status === 'paid' ? 'text-green-600' : 'text-gray-700 dark:text-gray-300'
+                                  inst.status === 'paid' ? 'text-green-600' : 'text-gray-700 dark:text-stone-300'
                                 }`}>
                                   {receivable.installments > 1 ? `${inst.installmentNumber}/${receivable.installments}` : '1x'}
                                 </span>
-                                <span className="text-sm text-gray-500">
+                                <span className="text-sm text-stone-500">
                                   {formatDateDisplay(inst.dueDate)}
                                 </span>
                                 {new Date(inst.dueDate) < new Date() && inst.status !== 'paid' && (
@@ -388,7 +388,7 @@ export default function ReceivablesPage() {
                               </div>
                               <div className="flex items-center gap-3">
                                 <span className={`font-medium ${
-                                  inst.status === 'paid' ? 'text-green-600 line-through' : 'text-gray-900 dark:text-white'
+                                  inst.status === 'paid' ? 'text-green-600 line-through' : 'text-stone-800 dark:text-white'
                                 }`}>
                                   {formatCurrency(inst.amount)}
                                 </span>
@@ -422,40 +422,40 @@ export default function ReceivablesPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Pessoa</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Descrição</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Categoria</th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Valor</th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Parcelas</th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Vencimento</th>
-                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Ações</th>
+                  <tr className="border-b border-stone-200 dark:border-neutral-800">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-stone-300">Pessoa</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-stone-300">Descrição</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-stone-300">Categoria</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-stone-300">Valor</th>
+                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-stone-300">Parcelas</th>
+                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-stone-300">Vencimento</th>
+                    <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-stone-300">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {receivables.filter(r => r.status !== 'paid').map((receivable) => (
-                    <tr key={receivable.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <tr key={receivable.id} className="border-b border-stone-100 dark:border-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-800/50">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-medium text-sm">
                             {receivable.personName.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-medium text-gray-900 dark:text-white">{receivable.personName}</span>
+                          <span className="font-medium text-stone-800 dark:text-white">{receivable.personName}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{receivable.description}</td>
+                      <td className="py-3 px-4 text-gray-700 dark:text-stone-300">{receivable.description}</td>
                       <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-sm">
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-stone-300 rounded text-sm">
                           {receivable.category}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right font-medium text-green-600 dark:text-green-400">
                         {formatCurrency((Number(receivable.amountTotal) - Number(receivable.paidAmount)).toString())}
                       </td>
-                      <td className="py-3 px-4 text-center text-gray-600 dark:text-gray-400">
+                      <td className="py-3 px-4 text-center text-gray-600 dark:text-stone-400">
                         {receivable.installmentsList.filter(i => i.status === 'paid').length}/{receivable.installments}
                       </td>
-                      <td className="py-3 px-4 text-center text-gray-600 dark:text-gray-400">
+                      <td className="py-3 px-4 text-center text-gray-600 dark:text-stone-400">
                         {formatDateDisplay(receivable.dueDate)}
                       </td>
                       <td className="py-3 px-4">
@@ -503,14 +503,14 @@ export default function ReceivablesPage() {
 
             {/* Select existing person or add new */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-stone-300 mb-1">
                 Pessoa *
               </label>
               {personNames.length > 0 ? (
                 <select
                   value={selectedPerson}
                   onChange={(e) => setSelectedPerson(e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="block w-full rounded-lg border border-gray-300 dark:border-neutral-700 px-3 py-2.5 text-stone-800 dark:text-white bg-white dark:bg-neutral-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 >
                   <option value="">+ Nova pessoa</option>
                   {personNames.map(name => (

@@ -10,17 +10,17 @@ interface CardProps {
 
 export default function Card({ children, className = '', title, subtitle, action }: CardProps) {
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors ${className}`}>
+    <div className={`bg-white dark:bg-neutral-900 rounded-2xl shadow-soft border border-stone-200/60 dark:border-neutral-800 ${className}`}>
       {(title || subtitle || action) && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 dark:border-neutral-800">
           <div>
-            {title && <h3 className="font-semibold text-gray-900 dark:text-white">{title}</h3>}
-            {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
+            {title && <h3 className="font-semibold text-stone-800 dark:text-stone-100">{title}</h3>}
+            {subtitle && <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">{subtitle}</p>}
           </div>
           {action && <div>{action}</div>}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </div>
   )
 }
@@ -33,16 +33,16 @@ interface CardStatProps {
 
 export function CardStat({ label, value, variant = 'default' }: CardStatProps) {
   const variants = {
-    default: 'text-gray-900 dark:text-white',
-    success: 'text-green-600 dark:text-green-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    danger: 'text-red-600 dark:text-red-400',
+    default: 'text-stone-800 dark:text-stone-100',
+    success: 'text-emerald-600 dark:text-emerald-400',
+    warning: 'text-amber-600 dark:text-amber-400',
+    danger: 'text-rose-600 dark:text-rose-400',
   }
 
   return (
-    <div>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-      <p className={`text-xl font-bold ${variants[variant]}`}>{value}</p>
+    <div className="animate-fade-in">
+      <p className="text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">{label}</p>
+      <p className={`text-2xl font-semibold tracking-tight ${variants[variant]}`}>{value}</p>
     </div>
   )
 }

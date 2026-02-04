@@ -11,6 +11,7 @@ export interface CardData {
   creditLimit: string
   closingDay: number
   dueDay: number
+  color: string
   createdAt: Date
 }
 
@@ -50,6 +51,7 @@ export interface CreateCardInput {
   creditLimit: string
   closingDay: number
   dueDay: number
+  color?: string
 }
 
 export async function createCard(data: CreateCardInput) {
@@ -75,6 +77,7 @@ export async function createCard(data: CreateCardInput) {
       creditLimit: new Decimal(data.creditLimit),
       closingDay: data.closingDay,
       dueDay: data.dueDay,
+      color: data.color || '#3d8585',
     },
   })
 
@@ -99,6 +102,7 @@ export async function updateCard(id: string, data: CreateCardInput) {
       creditLimit: new Decimal(data.creditLimit),
       closingDay: data.closingDay,
       dueDay: data.dueDay,
+      color: data.color || '#3d8585',
     },
   })
 

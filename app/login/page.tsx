@@ -110,23 +110,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-900 transition-colors">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-stone-100 to-stone-200 dark:from-neutral-950 dark:to-neutral-900">
+      <div className="w-full max-w-md animate-fade-in">
+        <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-3xl shadow-soft-lg border border-stone-200/50 dark:border-neutral-800/50 p-8">
           {/* Logo */}
           <div className="text-center mb-8">
             <img 
               src="/logo.png" 
               alt="Atena Gestão" 
-              className="w-20 h-20 mx-auto mb-4 rounded-2xl"
+              className="w-24 h-24 mx-auto mb-5 rounded-2xl shadow-soft hover:scale-105 transition-transform"
             />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Atena</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Gestão Financeira Pessoal</p>
+            <h1 className="text-2xl font-semibold text-stone-800 dark:text-stone-100">Atena</h1>
+            <p className="text-stone-500 dark:text-stone-400 mt-1">Gestão Financeira Pessoal</p>
           </div>
 
           {step === 'credentials' ? (
             /* Etapa 1: Email e Senha */
-            <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+            <form onSubmit={handleCredentialsSubmit} className="space-y-5">
               <Input
                 id="email"
                 name="email"
@@ -148,7 +148,7 @@ export default function LoginPage() {
               />
 
               {error && (
-                <div className="bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-300 text-sm p-3 rounded-lg">
+                <div className="bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-sm p-4 rounded-xl border border-rose-200 dark:border-rose-800/30">
                   {error}
                 </div>
               )}
@@ -159,15 +159,15 @@ export default function LoginPage() {
             </form>
           ) : (
             /* Etapa 2: Código de Verificação */
-            <form onSubmit={handleCodeSubmit} className="space-y-4">
+            <form onSubmit={handleCodeSubmit} className="space-y-5">
               <div className="text-center mb-4">
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
+                <p className="text-stone-600 dark:text-stone-400 text-sm">
                   Digite o código de 6 dígitos enviado para seu email
                 </p>
               </div>
 
               <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="code" className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
                   Código de verificação
                 </label>
                 <input
@@ -178,7 +178,7 @@ export default function LoginPage() {
                   maxLength={6}
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-stone-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="000000"
                   required
                   autoFocus
@@ -210,7 +210,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleBackToCredentials}
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="text-sm text-stone-500 dark:text-stone-400 hover:text-gray-700 dark:hover:text-gray-200"
                 >
                   ← Voltar
                 </button>

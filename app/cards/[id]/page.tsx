@@ -239,7 +239,7 @@ export default function CardDetailPage() {
 
   if (!card || !currentMonth || loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-stone-50 dark:bg-neutral-900">
         <Navbar isAdmin={isAdmin} />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <div className="animate-pulse space-y-4">
@@ -263,7 +263,7 @@ export default function CardDetailPage() {
   const displayMonth = `${monthNames[monthDate.getMonth()]} de ${monthDate.getFullYear()}`
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
       <Navbar isAdmin={isAdmin} />
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
@@ -273,13 +273,13 @@ export default function CardDetailPage() {
               href="/cards" 
               className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 dark:text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{card.name}</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Limite: {formatCurrency(card.creditLimit)}</p>
+              <h1 className="text-2xl font-bold text-stone-800 dark:text-white">{card.name}</h1>
+              <p className="text-sm text-stone-500 dark:text-stone-400">Limite: {formatCurrency(card.creditLimit)}</p>
             </div>
             <button
               onClick={() => setDeleteCardModalOpen(true)}
@@ -317,9 +317,9 @@ export default function CardDetailPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-green-800 dark:text-green-400 mb-1">Fatura Quitada!</h3>
-              <p className="text-gray-600 dark:text-gray-300">Você pagou <span className="font-semibold">{formatCurrency(summary?.paidTotal || '0')}</span> antecipadamente</p>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">Total gasto no mês: <span className="font-semibold text-gray-700 dark:text-gray-200">{formatCurrency(summary?.statementTotal || '0')}</span></p>
-              <div className="flex justify-center gap-8 mt-4 text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-stone-300">Você pagou <span className="font-semibold">{formatCurrency(summary?.paidTotal || '0')}</span> antecipadamente</p>
+              <p className="text-stone-500 dark:text-stone-400 mt-2">Total gasto no mês: <span className="font-semibold text-gray-700 dark:text-gray-200">{formatCurrency(summary?.statementTotal || '0')}</span></p>
+              <div className="flex justify-center gap-8 mt-4 text-sm text-stone-500 dark:text-stone-400">
                 <span>Fechamento: {formatDateDisplay(closingDate)}</span>
                 <span>Vencimento: {formatDateDisplay(dueDate)}</span>
               </div>
@@ -335,12 +335,12 @@ export default function CardDetailPage() {
                 variant={openTotal > 0 ? 'warning' : 'success'} 
               />
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Fechamento</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{formatDateDisplay(closingDate)}</p>
+                <p className="text-sm text-stone-500 dark:text-stone-400">Fechamento</p>
+                <p className="text-xl font-bold text-stone-800 dark:text-white">{formatDateDisplay(closingDate)}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Vencimento</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{formatDateDisplay(dueDate)}</p>
+                <p className="text-sm text-stone-500 dark:text-stone-400">Vencimento</p>
+                <p className="text-xl font-bold text-stone-800 dark:text-white">{formatDateDisplay(dueDate)}</p>
               </div>
             </div>
           )}
@@ -368,13 +368,13 @@ export default function CardDetailPage() {
 
         {/* Tabs - only show if loans are enabled */}
         {loansEnabled && (
-          <div className="flex border-b border-gray-200 mb-6">
+          <div className="flex border-b border-stone-200 dark:border-neutral-700 mb-6">
             <button
               onClick={() => setActiveTab('fatura')}
               className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
                 activeTab === 'fatura'
                   ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-stone-500 hover:text-gray-700'
               }`}
             >
               Fatura
@@ -384,7 +384,7 @@ export default function CardDetailPage() {
               className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'emprestimos'
                   ? 'border-primary-600 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-stone-500 hover:text-gray-700'
               }`}
             >
               Empréstimos
@@ -402,29 +402,29 @@ export default function CardDetailPage() {
           {/* Installments */}
           <Card title="Parcelas da Fatura" subtitle={`${installments.length} parcelas`}>
             {installments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-stone-500">
                 Nenhuma parcela neste mês
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 dark:border-gray-700">
-                      <th className="text-left py-2 font-medium text-gray-500 dark:text-gray-400">Descrição</th>
-                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400">Parcela</th>
-                      <th className="text-right py-2 font-medium text-gray-500 dark:text-gray-400">Valor</th>
-                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400">Status</th>
-                      <th className="text-center py-2 font-medium text-gray-500 dark:text-gray-400"></th>
+                    <tr className="border-b border-stone-100 dark:border-neutral-800 dark:border-neutral-800">
+                      <th className="text-left py-2 font-medium text-stone-500 dark:text-stone-400">Descrição</th>
+                      <th className="text-center py-2 font-medium text-stone-500 dark:text-stone-400">Parcela</th>
+                      <th className="text-right py-2 font-medium text-stone-500 dark:text-stone-400">Valor</th>
+                      <th className="text-center py-2 font-medium text-stone-500 dark:text-stone-400">Status</th>
+                      <th className="text-center py-2 font-medium text-stone-500 dark:text-stone-400"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {installments.map((inst) => (
-                      <tr key={inst.id} className="border-b border-gray-50 dark:border-gray-700 group">
+                      <tr key={inst.id} className="border-b border-stone-100 dark:border-neutral-800 dark:border-neutral-800 group">
                         <td className="py-2">
-                          <p className="font-medium text-gray-900 dark:text-white">{inst.description}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{formatDateDisplay(inst.purchaseDate)}</p>
+                          <p className="font-medium text-stone-800 dark:text-white">{inst.description}</p>
+                          <p className="text-xs text-stone-500 dark:text-stone-400">{formatDateDisplay(inst.purchaseDate)}</p>
                         </td>
-                        <td className="py-2 text-center text-gray-600 dark:text-gray-300">
+                        <td className="py-2 text-center text-gray-600 dark:text-stone-300">
                           {inst.installmentNumber}/{inst.totalInstallments}
                         </td>
                         <td className="py-2 text-right font-medium dark:text-white">
@@ -464,20 +464,20 @@ export default function CardDetailPage() {
           {/* Payments */}
           <Card title="Pagamentos" subtitle={`${payments.length} pagamentos`}>
             {payments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-stone-500">
                 Nenhum pagamento registrado
               </div>
             ) : (
               <div className="space-y-3">
                 {payments.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={payment.id} className="flex items-center justify-between p-3 bg-stone-50 dark:bg-neutral-900 rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900">{formatCurrency(payment.amount)}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="font-medium text-stone-800">{formatCurrency(payment.amount)}</p>
+                      <p className="text-xs text-stone-500">
                         {formatDateDisplay(payment.paymentDate)} • {payment.method}
                       </p>
                       {payment.note && (
-                        <p className="text-xs text-gray-400 mt-1">{payment.note}</p>
+                        <p className="text-xs text-stone-400 mt-1">{payment.note}</p>
                       )}
                     </div>
                     <div className="text-green-600">
@@ -515,14 +515,14 @@ export default function CardDetailPage() {
             <Card title="Resumo por Pessoa" subtitle="Valores em aberto">
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {borrowersSummary.map((borrower) => (
-                  <div key={borrower.borrowerName} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                  <div key={borrower.borrowerName} className="bg-gray-50 dark:bg-neutral-900 rounded-lg p-4">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 flex items-center justify-center font-bold">
                         {borrower.borrowerName.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900 dark:text-white">{borrower.borrowerName}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{borrower.loanCount} empréstimo(s)</p>
+                        <p className="font-medium text-stone-800 dark:text-white">{borrower.borrowerName}</p>
+                        <p className="text-xs text-stone-500 dark:text-stone-400">{borrower.loanCount} empréstimo(s)</p>
                       </div>
                       <button
                         onClick={() => {
@@ -560,29 +560,29 @@ export default function CardDetailPage() {
           {/* Loans List */}
           <Card title="Empréstimos" subtitle={`${loans.length} registros`}>
             {loans.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-stone-500">
                 Nenhum empréstimo registrado
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left py-2 font-medium text-gray-500">Pessoa</th>
-                      <th className="text-left py-2 font-medium text-gray-500">Descrição</th>
-                      <th className="text-right py-2 font-medium text-gray-500">Valor</th>
-                      <th className="text-right py-2 font-medium text-gray-500">Pago</th>
-                      <th className="text-right py-2 font-medium text-gray-500">Restante</th>
-                      <th className="text-center py-2 font-medium text-gray-500">Status</th>
-                      <th className="text-center py-2 font-medium text-gray-500"></th>
+                    <tr className="border-b border-stone-100 dark:border-neutral-800">
+                      <th className="text-left py-2 font-medium text-stone-500">Pessoa</th>
+                      <th className="text-left py-2 font-medium text-stone-500">Descrição</th>
+                      <th className="text-right py-2 font-medium text-stone-500">Valor</th>
+                      <th className="text-right py-2 font-medium text-stone-500">Pago</th>
+                      <th className="text-right py-2 font-medium text-stone-500">Restante</th>
+                      <th className="text-center py-2 font-medium text-stone-500">Status</th>
+                      <th className="text-center py-2 font-medium text-stone-500"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {loans.map((loan) => (
-                      <tr key={loan.id} className="border-b border-gray-50 group">
+                      <tr key={loan.id} className="border-b border-stone-100 dark:border-neutral-800 group">
                         <td className="py-2">
-                          <p className="font-medium text-gray-900">{loan.borrowerName}</p>
-                          <p className="text-xs text-gray-500">{formatDateDisplay(loan.loanDate)}</p>
+                          <p className="font-medium text-stone-800">{loan.borrowerName}</p>
+                          <p className="text-xs text-stone-500">{formatDateDisplay(loan.loanDate)}</p>
                         </td>
                         <td className="py-2 text-gray-600">{loan.description}</td>
                         <td className="py-2 text-right font-medium">{formatCurrency(loan.amount)}</td>
@@ -693,7 +693,7 @@ export default function CardDetailPage() {
                 id="installments"
                 name="installments"
                 defaultValue={1}
-                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 bg-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-stone-800 bg-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 required
               >
                 {Array.from({ length: 24 }, (_, i) => (
@@ -729,9 +729,9 @@ export default function CardDetailPage() {
           }
         >
           <form id="payment-form" onSubmit={handlePaymentSubmit} className="space-y-4">
-            <div className="bg-gray-50 p-3 rounded-lg mb-4">
-              <p className="text-sm text-gray-500">Valor em aberto</p>
-              <p className="text-xl font-bold text-gray-900">{formatCurrency(summary?.openTotal || '0')}</p>
+            <div className="bg-stone-50 dark:bg-neutral-900 p-3 rounded-lg mb-4">
+              <p className="text-sm text-stone-500">Valor em aberto</p>
+              <p className="text-xl font-bold text-stone-800">{formatCurrency(summary?.openTotal || '0')}</p>
             </div>
 
             <Input
@@ -764,7 +764,7 @@ export default function CardDetailPage() {
                 id="method"
                 name="method"
                 defaultValue="pix"
-                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 bg-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-stone-800 bg-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               >
                 <option value="pix">PIX</option>
                 <option value="boleto">Boleto</option>
@@ -882,13 +882,13 @@ export default function CardDetailPage() {
             {/* Select existing borrower or add new */}
             {borrowerNames.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-stone-300 mb-1">
                   Pessoa
                 </label>
                 <select
                   value={selectedBorrower}
                   onChange={(e) => setSelectedBorrower(e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="block w-full rounded-lg border border-gray-300 dark:border-neutral-700 px-3 py-2 text-stone-800 dark:text-white bg-white dark:bg-neutral-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 >
                   <option value="">+ Nova pessoa</option>
                   {borrowerNames.map(name => (
@@ -943,14 +943,14 @@ export default function CardDetailPage() {
             />
 
             <div>
-              <label htmlFor="installments" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="installments" className="block text-sm font-medium text-gray-700 dark:text-stone-300 mb-1">
                 Parcelas
               </label>
               <select
                 id="installments"
                 name="installments"
                 defaultValue={1}
-                className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="block w-full rounded-lg border border-gray-300 dark:border-neutral-700 px-3 py-2 text-stone-800 dark:text-white bg-white dark:bg-neutral-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 required
               >
                 {Array.from({ length: 24 }, (_, i) => (
@@ -997,9 +997,9 @@ export default function CardDetailPage() {
         >
           <form id="loan-payment-form" onSubmit={handleLoanPaymentSubmit} className="space-y-4">
             {selectedLoan && (
-              <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                <p className="text-sm text-gray-500">Empréstimo para <strong>{selectedLoan.borrowerName}</strong></p>
-                <p className="text-sm text-gray-500 mt-1">{selectedLoan.description}</p>
+              <div className="bg-stone-50 dark:bg-neutral-900 p-3 rounded-lg mb-4">
+                <p className="text-sm text-stone-500">Empréstimo para <strong>{selectedLoan.borrowerName}</strong></p>
+                <p className="text-sm text-stone-500 mt-1">{selectedLoan.description}</p>
                 <div className="flex justify-between mt-2">
                   <span className="text-sm">Valor restante:</span>
                   <span className="font-bold text-orange-600">{formatCurrency(selectedLoan.remainingAmount)}</span>

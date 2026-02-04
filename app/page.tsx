@@ -25,12 +25,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const currentMonth = params.month || recommendedMonth
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 transition-colors">
       <Navbar isAdmin={session?.isAdmin} />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <Suspense fallback={<div className="h-10 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />}>
+          <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">Dashboard</h1>
+          <Suspense fallback={<div className="h-10 w-48 bg-gray-200 dark:bg-neutral-800 rounded-lg animate-pulse" />}>
             <MonthSelector currentMonth={currentMonth} />
           </Suspense>
         </div>
@@ -109,7 +109,7 @@ async function DashboardContent({ month }: { month: string }) {
       {/* Cards Section */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Cartões de Crédito</h2>
+          <h2 className="text-lg font-semibold text-stone-800 dark:text-stone-100">Cartões de Crédito</h2>
           <Link 
             href="/cards" 
             className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
@@ -121,7 +121,7 @@ async function DashboardContent({ month }: { month: string }) {
         {data.cards.length === 0 ? (
           <Card>
             <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">Nenhum cartão cadastrado</p>
+              <p className="text-stone-500 dark:text-stone-400 mb-4">Nenhum cartão cadastrado</p>
               <Link
                 href="/cards"
                 className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
@@ -136,7 +136,7 @@ async function DashboardContent({ month }: { month: string }) {
               <Link key={card.id} href={`/cards/${card.id}?month=${month}`}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{card.name}</h3>
+                    <h3 className="font-semibold text-stone-800 dark:text-stone-100">{card.name}</h3>
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       Number(card.openTotal) > 0 
                         ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300' 
@@ -147,19 +147,19 @@ async function DashboardContent({ month }: { month: string }) {
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div>
-                      <p className="text-gray-500 dark:text-gray-400">Fatura</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(card.statementTotal)}</p>
+                      <p className="text-stone-500 dark:text-stone-400">Fatura</p>
+                      <p className="font-medium text-stone-800 dark:text-stone-100">{formatCurrency(card.statementTotal)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 dark:text-gray-400">Pago</p>
+                      <p className="text-stone-500 dark:text-stone-400">Pago</p>
                       <p className="font-medium text-green-600 dark:text-green-400">{formatCurrency(card.paidTotal)}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 dark:text-gray-400">Aberto</p>
+                      <p className="text-stone-500 dark:text-stone-400">Aberto</p>
                       <p className="font-medium text-yellow-600 dark:text-yellow-400">{formatCurrency(card.openTotal)}</p>
                     </div>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="mt-3 pt-3 border-t border-stone-100 dark:border-neutral-800 dark:border-neutral-800 text-xs text-stone-500 dark:text-stone-400">
                     Vencimento: {formatDateDisplay(card.dueDate)}
                   </div>
                 </Card>
@@ -197,19 +197,19 @@ async function DashboardContent({ month }: { month: string }) {
               {/* Summary */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Empréstimos</p>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(data.totalLoansOwed || '0')}</p>
+                  <p className="text-sm text-stone-500 dark:text-stone-400">Total Empréstimos</p>
+                  <p className="text-lg font-bold text-stone-800 dark:text-stone-100">{formatCurrency(data.totalLoansOwed || '0')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Outros</p>
+                  <p className="text-sm text-stone-500 dark:text-stone-400">Total Outros</p>
                   <p className="text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(totalReceivablesAmount.toString())}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Empréstimos Este Mês</p>
+                  <p className="text-sm text-stone-500 dark:text-stone-400">Empréstimos Este Mês</p>
                   <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{formatCurrency(data.totalLoansThisMonth || '0')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Geral</p>
+                  <p className="text-sm text-stone-500 dark:text-stone-400">Total Geral</p>
                   <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalAReceber.toString())}</p>
                 </div>
               </div>
@@ -225,7 +225,7 @@ async function DashboardContent({ month }: { month: string }) {
                   return (
                     <div 
                       key={personName} 
-                      className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      className="p-3 bg-gray-50 dark:bg-neutral-900 rounded-lg"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -233,8 +233,8 @@ async function DashboardContent({ month }: { month: string }) {
                             {personName.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white">{personName}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="font-medium text-stone-800 dark:text-stone-100">{personName}</p>
+                            <p className="text-xs text-stone-500 dark:text-stone-400">
                               {loan && <span>{loan.loanCount} empréstimo(s)</span>}
                               {loan && receivable && <span> • </span>}
                               {receivable && <span>{receivable.receivableCount} a receber</span>}
@@ -249,10 +249,10 @@ async function DashboardContent({ month }: { month: string }) {
                                 <p className="font-bold text-orange-600 dark:text-orange-400">
                                   {formatCurrency(monthAmount.toString())}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">parcelas este mês</p>
+                                <p className="text-xs text-stone-500 dark:text-stone-400">parcelas este mês</p>
                               </>
                             ) : (
-                              <p className="text-sm text-gray-400 dark:text-gray-500">
+                              <p className="text-sm text-stone-400 dark:text-stone-500">
                                 Sem parcela este mês
                               </p>
                             )}
@@ -264,23 +264,23 @@ async function DashboardContent({ month }: { month: string }) {
                       
                       {/* Loan Card Details */}
                       {loan?.cardDetails && loan.cardDetails.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Empréstimos (Cartão)</p>
+                        <div className="mt-3 pt-3 border-t border-stone-200 dark:border-neutral-800 space-y-2">
+                          <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-2">Empréstimos (Cartão)</p>
                           {loan.cardDetails.map((detail, idx) => (
                             <div 
                               key={idx} 
-                              className="flex items-center justify-between text-sm bg-white dark:bg-gray-700/50 p-2 rounded"
+                              className="flex items-center justify-between text-sm bg-white dark:bg-neutral-800/50 p-2 rounded"
                             >
                               <div className="flex items-center gap-2">
                                 <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded">
                                   {detail.cardName}
                                 </span>
-                                <span className="text-gray-600 dark:text-gray-300 truncate max-w-[150px]">
+                                <span className="text-gray-600 dark:text-stone-300 truncate max-w-[150px]">
                                   {detail.loanDescription || 'Empréstimo'}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3 text-xs">
-                                <span className="text-gray-500 dark:text-gray-400">
+                                <span className="text-stone-500 dark:text-stone-400">
                                   Parcela {detail.currentInstallment}/{detail.totalInstallments}
                                 </span>
                                 <span className="font-medium text-orange-600 dark:text-orange-400">
@@ -294,10 +294,10 @@ async function DashboardContent({ month }: { month: string }) {
                       
                       {/* Receivables Details */}
                       {receivable && (
-                        <div className={`${loan?.cardDetails?.length ? 'mt-2' : 'mt-3 pt-3 border-t border-gray-200 dark:border-gray-700'} space-y-2`}>
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Outros A Receber</p>
+                        <div className={`${loan?.cardDetails?.length ? 'mt-2' : 'mt-3 pt-3 border-t border-stone-200 dark:border-neutral-800'} space-y-2`}>
+                          <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-2">Outros A Receber</p>
                           <div className="flex items-center justify-between text-sm bg-green-50 dark:bg-green-900/30 p-2 rounded">
-                            <span className="text-gray-600 dark:text-gray-300">
+                            <span className="text-gray-600 dark:text-stone-300">
                               {receivable.receivableCount} item(s) pendente(s)
                             </span>
                             <span className="font-medium text-green-600 dark:text-green-400">
@@ -338,7 +338,7 @@ async function DashboardContent({ month }: { month: string }) {
       {/* Past month notice */}
       {isPastMonth && (
         <Card>
-          <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-6 text-stone-500 dark:text-stone-400">
             <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -356,17 +356,17 @@ function DashboardSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2" />
-            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+          <div key={i} className="bg-white dark:bg-neutral-900 rounded-xl p-4 animate-pulse">
+            <div className="h-4 bg-gray-200 dark:bg-neutral-800 rounded w-20 mb-2" />
+            <div className="h-6 bg-gray-200 dark:bg-neutral-800 rounded w-24" />
           </div>
         ))}
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4" />
+      <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 animate-pulse">
+        <div className="h-6 bg-gray-200 dark:bg-neutral-800 rounded w-40 mb-4" />
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div key={i} className="h-12 bg-gray-200 dark:bg-neutral-800 rounded" />
           ))}
         </div>
       </div>
