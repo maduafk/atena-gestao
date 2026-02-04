@@ -25,6 +25,8 @@ model User {
   incomeTransactions     IncomeTransaction[]
   loginCodes             LoginCode[]
   settings               UserSettings?
+  receivables            Receivable[]
+  receivableInstallments ReceivableInstallment[]
 
   @@map("users")
 }
@@ -203,4 +205,48 @@ model IncomeTransaction {
 enum InstallmentStatus {
   open
   paid
+}
+
+// A Receber - valores que pessoas vão te pagar (trabalhos, vendas, etc)
+model Receivable {
+  id           String                  @id @default(uuid()) @db.Uuid
+  userId       String                  @map("user_id") @db.Uuid
+  personName   String                  @map("person_name")
+  description  String
+  category     String                  @default("Outros") // Trabalho, Venda, Empréstimo Pessoal, etc
+  amountTotal  Decimal                 @map("amount_total") @db.Decimal(12, 2)
+  dueDate      DateTime                @map("due_date") @db.Date
+  installments Int                     @default(1)
+  paidAmount   Decimal                 @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  paidAt       DateTime?               @map("paid_at")
+  status       String                  @default("pending") // pending, partial, paid
+  createdAt    DateTime                @default(now()) @map("created_at")
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installmentsList ReceivableInstallment[]
+
+  @@index([userId])
+  @@index([personName])
+  @@index([status])
+  @@map("receivables")
+}
+
+model ReceivableInstallment {
+  id                String     @id @default(uuid()) @db.Uuid
+  userId            String     @map("user_id") @db.Uuid
+  receivableId      String     @map("receivable_id") @db.Uuid
+  installmentNumber Int        @map("installment_number")
+  amount            Decimal    @db.Decimal(12, 2)
+  dueDate           DateTime   @map("due_date") @db.Date
+  paidAmount        Decimal    @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  paidAt            DateTime?  @map("paid_at")
+  status            String     @default("pending") // pending, paid
+  createdAt         DateTime   @default(now()) @map("created_at")
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receivable        Receivable @relation(fields: [receivableId], references: [id], onDelete: Cascade)
+
+  @@unique([receivableId, installmentNumber])
+  @@index([userId])
+  @@index([receivableId])
+  @@index([dueDate])
+  @@map("receivable_installments")
 }

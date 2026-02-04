@@ -40,6 +40,10 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
   const downloadExcel = () => {
     if (!data) return
 
+    // Calculate totals
+    const totalEntradas = data.summary.totalIncome + data.summary.totalPayments
+    const totalSaidas = data.summary.totalDebit + data.summary.totalCredit
+
     // Prepare data rows with separate columns for entrada/saída
     const rows = data.rows.map(row => ({
       'Data': formatDate(row.date),
@@ -53,10 +57,12 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
     const summaryRows = [
       {},
       { 'Data': '', 'Descrição': 'RESUMO DO MÊS', 'Categoria': '', 'Entrada': '', 'Saída': '' },
-      { 'Data': '', 'Descrição': 'Total Entradas', 'Categoria': '', 'Entrada': data.summary.totalIncome + data.summary.totalPayments, 'Saída': '' },
-      { 'Data': '', 'Descrição': 'Total Saídas', 'Categoria': '', 'Entrada': '', 'Saída': data.summary.totalDebit + data.summary.totalCredit },
+      { 'Data': '', 'Descrição': 'Total Entradas', 'Categoria': '', 'Entrada': totalEntradas, 'Saída': '' },
+      { 'Data': '', 'Descrição': 'Total Saídas', 'Categoria': '', 'Entrada': '', 'Saída': totalSaidas },
       {},
-      { 'Data': '', 'Descrição': 'SALDO DO MÊS', 'Categoria': '', 'Entrada': data.summary.balance >= 0 ? data.summary.balance : '', 'Saída': data.summary.balance < 0 ? Math.abs(data.summary.balance) : '' },
+      { 'Data': '', 'Descrição': 'Saldo Este Mês', 'Categoria': '', 'Entrada': data.summary.balance >= 0 ? data.summary.balance : '', 'Saída': data.summary.balance < 0 ? Math.abs(data.summary.balance) : '' },
+      { 'Data': '', 'Descrição': 'Saldo Meses Anteriores', 'Categoria': '', 'Entrada': data.summary.previousBalance >= 0 ? data.summary.previousBalance : '', 'Saída': data.summary.previousBalance < 0 ? Math.abs(data.summary.previousBalance) : '' },
+      { 'Data': '', 'Descrição': 'SALDO TOTAL', 'Categoria': '', 'Entrada': data.summary.accumulatedBalance >= 0 ? data.summary.accumulatedBalance : '', 'Saída': data.summary.accumulatedBalance < 0 ? Math.abs(data.summary.accumulatedBalance) : '' },
     ]
 
     const allData = [...rows, ...summaryRows]
@@ -83,6 +89,10 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
   const downloadPDF = () => {
     if (!data) return
 
+    // Calculate totals
+    const totalEntradas = data.summary.totalIncome + data.summary.totalPayments
+    const totalSaidas = data.summary.totalDebit + data.summary.totalCredit
+
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
@@ -95,7 +105,6 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
     // Cores simples
     const darkGray: [number, number, number] = [51, 51, 51]
     const mediumGray: [number, number, number] = [128, 128, 128]
-    const lightGray: [number, number, number] = [245, 245, 245]
 
     // Formatação do mês
     const [ano, mes] = month.split('-')
@@ -128,22 +137,22 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
     doc.setFont('helvetica', 'normal')
     doc.text('Entradas:', 15, resumoY)
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(34, 139, 34) // Verde escuro
+    doc.setTextColor(34, 139, 34)
     doc.text(`+ ${formatCurrency(totalEntradas.toString())}`, 40, resumoY)
 
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...darkGray)
     doc.text('Saídas:', 85, resumoY)
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(178, 34, 34) // Vermelho escuro
+    doc.setTextColor(178, 34, 34)
     doc.text(`- ${formatCurrency(totalSaidas.toString())}`, 105, resumoY)
 
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...darkGray)
-    doc.text('Saldo:', 155, resumoY)
+    doc.text('Saldo Total:', 155, resumoY)
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(data.summary.balance >= 0 ? 34 : 178, data.summary.balance >= 0 ? 139 : 34, data.summary.balance >= 0 ? 34 : 34)
-    doc.text(`${data.summary.balance >= 0 ? '+' : '-'} ${formatCurrency(Math.abs(data.summary.balance).toString())}`, 173, resumoY)
+    doc.setTextColor(data.summary.accumulatedBalance >= 0 ? 34 : 178, data.summary.accumulatedBalance >= 0 ? 139 : 34, data.summary.accumulatedBalance >= 0 ? 34 : 34)
+    doc.text(`${data.summary.accumulatedBalance >= 0 ? '+' : '-'} ${formatCurrency(Math.abs(data.summary.accumulatedBalance).toString())}`, 185, resumoY)
 
     // Tabela de transações - estilo clean
     const tableData = data.rows.map(row => [
@@ -313,26 +322,36 @@ export default function MonthSpreadsheet({ month }: MonthSpreadsheetProps) {
 
         {/* Saldo */}
         <div className={`rounded-xl p-4 border ${
-          data.summary.balance >= 0 
+          data.summary.accumulatedBalance >= 0 
             ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100' 
             : 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200'
         }`}>
           <div className="flex items-center gap-2 mb-3">
-            <div className={`p-2 rounded-lg ${data.summary.balance >= 0 ? 'bg-blue-100' : 'bg-gray-200'}`}>
-              <svg className={`w-5 h-5 ${data.summary.balance >= 0 ? 'text-blue-600' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`p-2 rounded-lg ${data.summary.accumulatedBalance >= 0 ? 'bg-blue-100' : 'bg-gray-200'}`}>
+              <svg className={`w-5 h-5 ${data.summary.accumulatedBalance >= 0 ? 'text-blue-600' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
-            <span className={`font-medium ${data.summary.balance >= 0 ? 'text-blue-800' : 'text-gray-700'}`}>Saldo do Mês</span>
+            <span className={`font-medium ${data.summary.accumulatedBalance >= 0 ? 'text-blue-800' : 'text-gray-700'}`}>Saldo</span>
           </div>
-          <p className={`text-2xl font-bold mb-2 ${data.summary.balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-            {data.summary.balance >= 0 ? '+' : ''}{formatCurrency(data.summary.balance.toString())}
+          <p className={`text-2xl font-bold mb-2 ${data.summary.accumulatedBalance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+            {data.summary.accumulatedBalance >= 0 ? '+' : ''}{formatCurrency(data.summary.accumulatedBalance.toString())}
           </p>
-          <div className="text-sm text-gray-500">
-            {data.summary.balance >= 0 
-              ? '✓ Você ficou no positivo!' 
-              : '⚠ Gastou mais do que recebeu'
-            }
+          <div className="space-y-1 text-sm">
+            {data.summary.previousBalance !== 0 && (
+              <div className="flex justify-between text-gray-500">
+                <span>Meses anteriores</span>
+                <span className={data.summary.previousBalance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {data.summary.previousBalance >= 0 ? '+' : ''}{formatCurrency(data.summary.previousBalance.toString())}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between text-gray-500">
+              <span>Este mês</span>
+              <span className={data.summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                {data.summary.balance >= 0 ? '+' : ''}{formatCurrency(data.summary.balance.toString())}
+              </span>
+            </div>
           </div>
         </div>
       </div>

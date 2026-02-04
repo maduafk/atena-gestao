@@ -22,6 +22,8 @@ export interface DashboardData {
   totalDebitSpending: string
   totalIncome: string
   balance: string
+  previousBalance: string  // Saldo acumulado dos meses anteriores
+  accumulatedBalance: string  // Saldo total (anterior + atual)
   cards: CardSummary[]
   recentActivity: ActivityItem[]
   // Loans data (only if enabled)
@@ -60,6 +62,44 @@ export interface ActivityItem {
   amount: string
   date: Date
   cardName?: string
+}
+
+/**
+ * Calcula o saldo acumulado de todos os meses anteriores ao mês informado
+ * Saldo = Receitas - Débitos - Pagamentos de Cartão
+ */
+async function getAccumulatedBalanceBefore(userId: string, beforeMonth: Date): Promise<DecimalJS> {
+  // Receitas anteriores
+  const incomeAgg = await prisma.incomeTransaction.aggregate({
+    where: {
+      userId,
+      date: { lt: beforeMonth },
+    },
+    _sum: { amount: true },
+  })
+  const totalIncome = new DecimalJS(incomeAgg._sum.amount?.toString() || '0')
+
+  // Débitos anteriores
+  const debitAgg = await prisma.debitTransaction.aggregate({
+    where: {
+      userId,
+      date: { lt: beforeMonth },
+    },
+    _sum: { amount: true },
+  })
+  const totalDebit = new DecimalJS(debitAgg._sum.amount?.toString() || '0')
+
+  // Pagamentos de cartão anteriores
+  const paymentsAgg = await prisma.cardPayment.aggregate({
+    where: {
+      userId,
+      statementMonth: { lt: beforeMonth },
+    },
+    _sum: { amount: true },
+  })
+  const totalPayments = new DecimalJS(paymentsAgg._sum.amount?.toString() || '0')
+
+  return totalIncome.minus(totalDebit).minus(totalPayments)
 }
 
 export async function getDashboardData(statementMonth: string): Promise<DashboardData> {
@@ -147,9 +187,14 @@ export async function getDashboardData(statementMonth: string): Promise<Dashboar
   })
   const totalIncome = new DecimalJS(incomeAgg._sum.amount?.toString() || '0')
 
-  // Calculate balance: income - debit spending - card payments (not card purchases!)
-  // Card purchases are credit, only affects balance when you actually pay the bill
+  // Calculate balance of THIS month only: income - debit spending - card payments
   const balance = totalIncome.minus(totalDebitSpending).minus(totalPaidTowardsCards)
+
+  // Calculate accumulated balance from previous months
+  const previousBalance = await getAccumulatedBalanceBefore(session.userId, monthDate)
+  
+  // Total accumulated balance (previous + current month)
+  const accumulatedBalance = previousBalance.plus(balance)
 
   // Get recent activity (last 10 items)
   const recentActivity = await getRecentActivity(session.userId, 10)
@@ -290,6 +335,8 @@ export async function getDashboardData(statementMonth: string): Promise<Dashboar
     totalDebitSpending: totalDebitSpending.toString(),
     totalIncome: totalIncome.toString(),
     balance: balance.toString(),
+    previousBalance: previousBalance.toString(),
+    accumulatedBalance: accumulatedBalance.toString(),
     cards: cardSummaries,
     recentActivity,
     loansEnabled,
@@ -390,6 +437,8 @@ export interface MonthDetailData {
     totalCredit: number
     totalPayments: number
     balance: number
+    previousBalance: number  // Saldo acumulado anterior
+    accumulatedBalance: number  // Saldo total
   }
 }
 
@@ -514,7 +563,16 @@ export async function getMonthDetailData(statementMonth: string): Promise<MonthD
     .filter(r => r.type === 'Pagamento Cartão')
     .reduce((sum, r) => sum + r.amount, 0)
 
-  const balance = totalIncome - totalDebit - totalCredit
+  // Balanço deste mês: Receita - Débito - Pagamentos de Cartão
+  // (Crédito não entra aqui porque só afeta quando paga a fatura)
+  const balance = totalIncome - totalDebit - totalPayments
+
+  // Saldo acumulado dos meses anteriores
+  const previousBalance = await getAccumulatedBalanceBefore(session.userId, monthDate)
+  const previousBalanceNum = previousBalance.toNumber()
+
+  // Saldo total acumulado
+  const accumulatedBalance = previousBalanceNum + balance
 
   return {
     rows,
@@ -524,6 +582,8 @@ export async function getMonthDetailData(statementMonth: string): Promise<MonthD
       totalCredit,
       totalPayments,
       balance,
+      previousBalance: previousBalanceNum,
+      accumulatedBalance,
     },
   }
 }

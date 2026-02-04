@@ -69,7 +69,7 @@ async function DashboardContent({ month }: { month: string }) {
         </div>
       ) : (
         // Full summary for current/future months
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
           <Card className="col-span-1">
             <CardStat label="Gastos Cartão" value={formatCurrency(data.totalCreditSpending)} variant="danger" />
           </Card>
@@ -87,9 +87,16 @@ async function DashboardContent({ month }: { month: string }) {
           </Card>
           <Card className="col-span-1">
             <CardStat 
-              label="Saldo" 
+              label="Saldo Mês" 
               value={formatCurrency(data.balance)} 
               variant={Number(data.balance) >= 0 ? 'success' : 'danger'} 
+            />
+          </Card>
+          <Card className="col-span-1">
+            <CardStat 
+              label="Saldo Total" 
+              value={formatCurrency(data.accumulatedBalance)} 
+              variant={Number(data.accumulatedBalance) >= 0 ? 'success' : 'danger'} 
             />
           </Card>
         </div>
