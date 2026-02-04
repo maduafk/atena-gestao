@@ -27,6 +27,7 @@ export async function getCards(): Promise<CardData[]> {
   return cards.map(card => ({
     ...card,
     creditLimit: card.creditLimit.toString(),
+    color: card.color || '#1a1a1a',
   }))
 }
 
@@ -43,6 +44,7 @@ export async function getCard(id: string): Promise<CardData | null> {
   return {
     ...card,
     creditLimit: card.creditLimit.toString(),
+    color: card.color || '#1a1a1a',
   }
 }
 

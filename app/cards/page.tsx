@@ -320,7 +320,7 @@ export default function CardsPage() {
                       type="radio"
                       name="color"
                       value={color.value}
-                      defaultChecked={editingCard?.color === color.value || (!editingCard && color.value === '#1a1a1a')}
+                      defaultChecked={(editingCard?.color || '#1a1a1a') === color.value || (!editingCard && color.value === '#1a1a1a')}
                       className="sr-only peer"
                     />
                     <div 
