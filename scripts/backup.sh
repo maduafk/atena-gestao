@@ -13,7 +13,7 @@ mkdir -p $BACKUP_DIR
 echo "🔄 Iniciando backup do banco de dados..."
 
 # Fazer dump do banco
-docker exec postgres pg_dump -U postgres -d atena-db > "$BACKUP_FILE"
+docker exec atena-postgres pg_dump -U postgres -d atena-db > "$BACKUP_FILE"
 
 if [ $? -eq 0 ]; then
     # Comprimir o backup

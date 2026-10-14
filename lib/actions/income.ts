@@ -5,10 +5,12 @@ import { verifySession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { Decimal } from '@prisma/client/runtime/library'
 import { parseStatementMonth, parseLocalDate } from '@/lib/utils'
+import { generateRecurringForMonth } from '@/lib/actions/recurring'
 
 export interface IncomeTransactionData {
   id: string
   description: string
+  category: string
   amount: string
   date: Date
   createdAt: Date
@@ -17,6 +19,8 @@ export interface IncomeTransactionData {
 export async function getIncomeTransactions(statementMonth: string): Promise<IncomeTransactionData[]> {
   const session = await verifySession()
   if (!session) throw new Error('Não autorizado')
+
+  await generateRecurringForMonth(statementMonth)
 
   const monthDate = parseStatementMonth(statementMonth)
   const nextMonth = new Date(monthDate)
@@ -36,6 +40,7 @@ export async function getIncomeTransactions(statementMonth: string): Promise<Inc
   return transactions.map(t => ({
     id: t.id,
     description: t.description,
+    category: t.category,
     amount: t.amount.toString(),
     date: t.date,
     createdAt: t.createdAt,
@@ -46,6 +51,7 @@ export interface CreateIncomeInput {
   description: string
   amount: string
   date: string
+  category?: string
 }
 
 export async function createIncomeTransaction(data: CreateIncomeInput) {
@@ -60,6 +66,7 @@ export async function createIncomeTransaction(data: CreateIncomeInput) {
     data: {
       userId: session.userId,
       description: data.description,
+      category: data.category || 'Outros',
       amount: new Decimal(data.amount),
       date: parseLocalDate(data.date),
     },
@@ -69,6 +76,33 @@ export async function createIncomeTransaction(data: CreateIncomeInput) {
   revalidatePath('/')
 
   return transaction
+}
+
+export async function updateIncomeTransaction(id: string, data: CreateIncomeInput) {
+  const session = await verifySession()
+  if (!session) throw new Error('Não autorizado')
+
+  if (!data.description || !data.amount) {
+    throw new Error('Descrição e valor são obrigatórios')
+  }
+
+  const transaction = await prisma.incomeTransaction.findFirst({
+    where: { id, userId: session.userId },
+  })
+  if (!transaction) throw new Error('Receita não encontrada')
+
+  await prisma.incomeTransaction.update({
+    where: { id },
+    data: {
+      description: data.description,
+      category: data.category || 'Outros',
+      amount: new Decimal(data.amount),
+      date: parseLocalDate(data.date),
+    },
+  })
+
+  revalidatePath('/income')
+  revalidatePath('/')
 }
 
 export async function deleteIncomeTransaction(id: string) {

@@ -6,13 +6,14 @@ import Navbar from '@/components/Navbar'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { getUserSettings, updateUserSettings, UserSettingsData } from '@/lib/actions/settings'
-import { getCurrentSession } from '@/lib/actions/auth'
+import { getCurrentSession, logout } from '@/lib/actions/auth'
 
 export default function SettingsPage() {
   const router = useRouter()
   const [settings, setSettings] = useState<UserSettingsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -34,13 +35,14 @@ export default function SettingsPage() {
     if (!settings) return
     
     setSaving(true)
+    setSaveError(null)
     const newValue = !settings[key]
     
     try {
       await updateUserSettings({ [key]: newValue })
       setSettings({ ...settings, [key]: newValue })
     } catch (error) {
-      console.error('Error saving settings:', error)
+      setSaveError(error instanceof Error ? error.message : 'Não foi possível salvar')
     } finally {
       setSaving(false)
     }
@@ -48,7 +50,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
+      <div className="min-h-screen">
         <Navbar isAdmin={isAdmin} />
         <main className="max-w-3xl mx-auto px-4 py-6">
           <div className="animate-pulse space-y-4">
@@ -61,7 +63,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
+    <div className="min-h-screen">
       <Navbar isAdmin={isAdmin} />
       <main className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex items-center gap-3 mb-6">
@@ -114,6 +116,9 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+          {saveError && (
+            <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">{saveError}</p>
+          )}
         </Card>
 
         <Card title="Conta" subtitle="Informações da sua conta" className="mt-6">
@@ -125,15 +130,11 @@ export default function SettingsPage() {
                   Encerrar sessão atual
                 </p>
               </div>
-              <Button 
-                variant="secondary"
-                onClick={() => {
-                  document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-                  router.push('/login')
-                }}
-              >
-                Sair
-              </Button>
+              <form action={logout}>
+                <Button type="submit" variant="secondary">
+                  Sair
+                </Button>
+              </form>
             </div>
           </div>
         </Card>

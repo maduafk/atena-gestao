@@ -47,6 +47,7 @@ export default function ReceivablesPage() {
   
   // Form states
   const [formError, setFormError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   // View mode
@@ -71,7 +72,7 @@ export default function ReceivablesPage() {
       setPersonNames(namesData)
       setSummaryByPerson(summaryData)
     } catch (error) {
-      console.error('Error loading data:', error)
+      setActionError(error instanceof Error ? error.message : 'Erro ao carregar')
     } finally {
       setLoading(false)
     }
@@ -112,7 +113,7 @@ export default function ReceivablesPage() {
       setSelectedInstallmentId(null)
       loadData()
     } catch (error) {
-      console.error('Error:', error)
+      setActionError(error instanceof Error ? error.message : 'Erro ao registrar pagamento')
     } finally {
       setSubmitting(false)
     }
@@ -124,7 +125,7 @@ export default function ReceivablesPage() {
       await markReceivableAsPaid(receivableId)
       loadData()
     } catch (error) {
-      console.error('Error:', error)
+      setActionError(error instanceof Error ? error.message : 'Erro ao marcar como pago')
     } finally {
       setSubmitting(false)
     }
@@ -139,7 +140,7 @@ export default function ReceivablesPage() {
       setSelectedReceivable(null)
       loadData()
     } catch (error) {
-      console.error('Error:', error)
+      setActionError(error instanceof Error ? error.message : 'Erro ao excluir')
     } finally {
       setSubmitting(false)
     }
@@ -166,7 +167,7 @@ export default function ReceivablesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 transition-colors">
+    <div className="min-h-screen">
       <Navbar isAdmin={isAdmin} />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
@@ -183,6 +184,9 @@ export default function ReceivablesPage() {
             Novo A Receber
           </Button>
         </div>
+        {actionError && (
+          <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{actionError}</p>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

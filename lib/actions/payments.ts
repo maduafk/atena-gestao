@@ -167,6 +167,46 @@ export async function createPayment(data: CreatePaymentInput) {
   revalidatePath('/')
 }
 
+export async function deletePayment(paymentId: string) {
+  const session = await verifySession()
+  if (!session) throw new Error('Não autorizado')
+
+  const payment = await prisma.cardPayment.findFirst({
+    where: { id: paymentId, userId: session.userId },
+    include: { allocations: true },
+  })
+
+  if (!payment) throw new Error('Pagamento não encontrado')
+
+  const installmentIds = payment.allocations.map(allocation => allocation.installmentId)
+
+  await prisma.$transaction(async (tx) => {
+    await tx.cardPayment.delete({ where: { id: payment.id } })
+
+    for (const installmentId of installmentIds) {
+      const installment = await tx.cardInstallment.findUnique({ where: { id: installmentId } })
+      if (!installment) continue
+
+      const allocatedAgg = await tx.cardPaymentAllocation.aggregate({
+        where: { installmentId },
+        _sum: { amount: true },
+      })
+      const allocated = new DecimalJS(allocatedAgg._sum.amount?.toString() || '0')
+      const installmentAmount = new DecimalJS(installment.amount.toString())
+
+      if (allocated.lessThan(installmentAmount) && installment.status === 'paid') {
+        await tx.cardInstallment.update({
+          where: { id: installmentId },
+          data: { status: 'open' },
+        })
+      }
+    }
+  })
+
+  revalidatePath(`/cards/${payment.cardId}`)
+  revalidatePath('/')
+}
+
 export interface PaymentData {
   id: string
   amount: string

@@ -8,11 +8,13 @@ import MonthSelector from '@/components/MonthSelector'
 import Card, { CardStat } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import Select from '@/components/ui/Select'
+import { SPENDING_CATEGORIES } from '@/lib/categories'
 import Modal from '@/components/ui/Modal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import { getCard, deleteCard, CardData } from '@/lib/actions/cards'
-import { createPurchase, getInstallmentsForStatement, deletePurchase, InstallmentData } from '@/lib/actions/purchases'
-import { getStatementSummary, createPayment, getPaymentsForStatement, PaymentData, StatementSummary } from '@/lib/actions/payments'
+import { createPurchase, getInstallmentsForStatement, deletePurchase, updatePurchaseDescription, getCardAvailability, InstallmentData } from '@/lib/actions/purchases'
+import { getStatementSummary, createPayment, getPaymentsForStatement, deletePayment, PaymentData, StatementSummary } from '@/lib/actions/payments'
 import { createLoan, getLoansForCard, registerLoanPayment, deleteLoan, LoanData, getLoansSummaryByBorrower, getBorrowerNames } from '@/lib/actions/loans'
 import { getUserSettings } from '@/lib/actions/settings'
 import { getCurrentSession } from '@/lib/actions/auth'
@@ -33,7 +35,11 @@ export default function CardDetailPage() {
   const [purchaseModalOpen, setPurchaseModalOpen] = useState(false)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [availability, setAvailability] = useState<{ used: string; available: string } | null>(null)
+  const [editingPurchase, setEditingPurchase] = useState<InstallmentData | null>(null)
+  const [paymentToDelete, setPaymentToDelete] = useState<PaymentData | null>(null)
 
   // Delete confirmation states
   const [deleteCardModalOpen, setDeleteCardModalOpen] = useState(false)
@@ -100,13 +106,15 @@ export default function CardDetailPage() {
         getStatementSummary(cardId, currentMonth),
         getInstallmentsForStatement(cardId, currentMonth),
         getPaymentsForStatement(cardId, currentMonth),
+        getCardAvailability(cardId),
       ]
       
-      const [summaryData, installmentsData, paymentsData] = await Promise.all(basePromises)
+      const [summaryData, installmentsData, paymentsData, availabilityData] = await Promise.all(basePromises)
       
       setSummary(summaryData as StatementSummary)
       setInstallments(installmentsData as InstallmentData[])
       setPayments(paymentsData as PaymentData[])
+      setAvailability(availabilityData as { used: string; available: string })
       
       // Load loans only if enabled
       if (loansEnabled) {
@@ -145,6 +153,7 @@ export default function CardDetailPage() {
       amountTotal: formData.get('amountTotal') as string,
       purchaseDate: formData.get('purchaseDate') as string,
       installments: parseInt(formData.get('installments') as string),
+      category: formData.get('category') as string,
     }
 
     try {
@@ -239,7 +248,7 @@ export default function CardDetailPage() {
 
   if (!card || !currentMonth || loading) {
     return (
-      <div className="min-h-screen bg-stone-50 dark:bg-neutral-900">
+      <div className="min-h-screen">
         <Navbar isAdmin={isAdmin} />
         <main className="max-w-7xl mx-auto px-4 py-6">
           <div className="animate-pulse space-y-4">
@@ -263,7 +272,7 @@ export default function CardDetailPage() {
   const displayMonth = `${monthNames[monthDate.getMonth()]} de ${monthDate.getFullYear()}`
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
+    <div className="min-h-screen">
       <Navbar isAdmin={isAdmin} />
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
@@ -279,7 +288,12 @@ export default function CardDetailPage() {
             </Link>
             <div>
               <h1 className="text-2xl font-bold text-stone-800 dark:text-white">{card.name}</h1>
-              <p className="text-sm text-stone-500 dark:text-stone-400">Limite: {formatCurrency(card.creditLimit)}</p>
+              <p className="text-sm text-stone-500 dark:text-stone-400">
+                Limite: {formatCurrency(card.creditLimit)}
+                {availability && (
+                  <span> · Usado {formatCurrency(availability.used)} · Disponível {formatCurrency(availability.available)}</span>
+                )}
+              </p>
             </div>
             <button
               onClick={() => setDeleteCardModalOpen(true)}
@@ -293,6 +307,9 @@ export default function CardDetailPage() {
           </div>
           <MonthSelector currentMonth={currentMonth} />
         </div>
+        {actionError && (
+          <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{actionError}</p>
+        )}
 
         {/* Current Month Banner */}
         <div className="bg-primary-600 dark:bg-primary-700 text-white rounded-xl p-4 mb-6 flex items-center justify-between">
@@ -402,7 +419,7 @@ export default function CardDetailPage() {
           {/* Installments */}
           <Card title="Parcelas da Fatura" subtitle={`${installments.length} parcelas`}>
             {installments.length === 0 ? (
-              <div className="text-center py-8 text-stone-500">
+              <div className="text-center py-8 text-stone-500 dark:text-stone-400">
                 Nenhuma parcela neste mês
               </div>
             ) : (
@@ -427,7 +444,7 @@ export default function CardDetailPage() {
                         <td className="py-2 text-center text-gray-600 dark:text-stone-300">
                           {inst.installmentNumber}/{inst.totalInstallments}
                         </td>
-                        <td className="py-2 text-right font-medium dark:text-white">
+                        <td className="py-3 text-right font-medium tabular-nums text-stone-800 dark:text-stone-100">
                           {formatCurrency(inst.amount)}
                         </td>
                         <td className="py-2 text-center">
@@ -440,18 +457,32 @@ export default function CardDetailPage() {
                           </span>
                         </td>
                         <td className="py-2 text-center">
+                          <div className="flex gap-1 justify-center">
+                          <button
+                            onClick={() => {
+                              setEditingPurchase(inst)
+                              setFormError(null)
+                            }}
+                            className="p-1.5 hover:bg-stone-200 dark:hover:bg-neutral-700 rounded-md"
+                            title="Editar descrição"
+                          >
+                            <svg className="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
                           <button
                             onClick={() => {
                               setPurchaseToDelete(inst)
                               setDeletePurchaseModalOpen(true)
                             }}
-                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900 rounded-md"
                             title="Excluir compra"
                           >
                             <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                           </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -464,7 +495,7 @@ export default function CardDetailPage() {
           {/* Payments */}
           <Card title="Pagamentos" subtitle={`${payments.length} pagamentos`}>
             {payments.length === 0 ? (
-              <div className="text-center py-8 text-stone-500">
+              <div className="text-center py-8 text-stone-500 dark:text-stone-400">
                 Nenhum pagamento registrado
               </div>
             ) : (
@@ -472,19 +503,21 @@ export default function CardDetailPage() {
                 {payments.map((payment) => (
                   <div key={payment.id} className="flex items-center justify-between p-3 bg-stone-50 dark:bg-neutral-900 rounded-lg">
                     <div>
-                      <p className="font-medium text-stone-800">{formatCurrency(payment.amount)}</p>
-                      <p className="text-xs text-stone-500">
+                      <p className="font-medium text-stone-800 dark:text-stone-100 tabular-nums">{formatCurrency(payment.amount)}</p>
+                      <p className="text-xs text-stone-500 dark:text-stone-400">
                         {formatDateDisplay(payment.paymentDate)} • {payment.method}
                       </p>
                       {payment.note && (
                         <p className="text-xs text-stone-400 mt-1">{payment.note}</p>
                       )}
                     </div>
-                    <div className="text-green-600">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentToDelete(payment)}
+                      className="text-xs px-2 py-1 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                    >
+                      Estornar
+                    </button>
                   </div>
                 ))}
               </div>
@@ -600,7 +633,7 @@ export default function CardDetailPage() {
                           </span>
                         </td>
                         <td className="py-2 text-center">
-                          <div className="flex gap-1 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1 justify-center">
                             {loan.status !== 'paid' && (
                               <button
                                 onClick={() => {
@@ -663,6 +696,14 @@ export default function CardDetailPage() {
               label="Descrição"
               placeholder="Ex: Mercado, Restaurante..."
               required
+            />
+
+            <Select
+              id="purchase-category"
+              name="category"
+              label="Categoria"
+              defaultValue="Outros"
+              options={SPENDING_CATEGORIES.map(category => ({ value: category, label: category }))}
             />
 
             <Input
@@ -798,7 +839,7 @@ export default function CardDetailPage() {
               await deleteCard(card.id)
               router.push('/cards')
             } catch (error) {
-              alert(error instanceof Error ? error.message : 'Erro ao excluir cartão')
+              setActionError(error instanceof Error ? error.message : 'Erro ao excluir cartão')
               setDeleting(false)
               setDeleteCardModalOpen(false)
             }
@@ -826,7 +867,7 @@ export default function CardDetailPage() {
               setPurchaseToDelete(null)
               loadData()
             } catch (error) {
-              alert(error instanceof Error ? error.message : 'Erro ao excluir')
+              setActionError(error instanceof Error ? error.message : 'Erro ao excluir')
             } finally {
               setDeleting(false)
             }
@@ -837,6 +878,71 @@ export default function CardDetailPage() {
             : ''
           }
           confirmText="Excluir Compra"
+          variant="danger"
+          loading={deleting}
+        />
+
+        <Modal
+          isOpen={!!editingPurchase}
+          onClose={() => setEditingPurchase(null)}
+          title="Editar descrição"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setEditingPurchase(null)}>Cancelar</Button>
+              <Button type="submit" form="edit-purchase-form" loading={submitting}>Salvar</Button>
+            </>
+          }
+        >
+          <form
+            id="edit-purchase-form"
+            className="space-y-4"
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!editingPurchase) return
+              setSubmitting(true)
+              setFormError(null)
+              try {
+                const description = String(new FormData(e.currentTarget).get('description') || '')
+                await updatePurchaseDescription(editingPurchase.purchaseId, description)
+                setEditingPurchase(null)
+                loadData()
+              } catch (error) {
+                setFormError(error instanceof Error ? error.message : 'Erro ao salvar')
+              } finally {
+                setSubmitting(false)
+              }
+            }}
+          >
+            <Input
+              id="edit-description"
+              name="description"
+              label="Descrição"
+              defaultValue={editingPurchase?.description || ''}
+              required
+            />
+            {formError && <p className="text-sm text-rose-600 dark:text-rose-400">{formError}</p>}
+          </form>
+        </Modal>
+
+        <ConfirmModal
+          isOpen={!!paymentToDelete}
+          onClose={() => setPaymentToDelete(null)}
+          onConfirm={async () => {
+            if (!paymentToDelete) return
+            setDeleting(true)
+            try {
+              await deletePayment(paymentToDelete.id)
+              setPaymentToDelete(null)
+              loadData()
+            } catch (error) {
+              setActionError(error instanceof Error ? error.message : 'Erro ao estornar pagamento')
+            } finally {
+              setDeleting(false)
+            }
+          }}
+          title="Estornar pagamento"
+          message={paymentToDelete ? `Estornar o pagamento de ${formatCurrency(paymentToDelete.amount)}? As parcelas voltam a ficar em aberto na parte que esse pagamento cobria.` : ''}
+          confirmText="Estornar"
           variant="danger"
           loading={deleting}
         />
@@ -1043,7 +1149,7 @@ export default function CardDetailPage() {
               setLoanToDelete(null)
               loadData()
             } catch (error) {
-              alert(error instanceof Error ? error.message : 'Erro ao excluir')
+              setActionError(error instanceof Error ? error.message : 'Erro ao excluir')
             } finally {
               setDeleting(false)
             }

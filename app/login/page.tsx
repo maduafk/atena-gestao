@@ -110,7 +110,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-stone-100 to-stone-200 dark:from-neutral-950 dark:to-neutral-900">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-3xl shadow-soft-lg border border-stone-200/50 dark:border-neutral-800/50 p-8">
           {/* Logo */}

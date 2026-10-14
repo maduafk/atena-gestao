@@ -10,9 +10,13 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Modal from '@/components/ui/Modal'
 import ConfirmModal from '@/components/ui/ConfirmModal'
+import Select from '@/components/ui/Select'
+import RecurringPanel from '@/components/RecurringPanel'
+import { INCOME_CATEGORIES } from '@/lib/categories'
 import { 
   getIncomeTransactions, 
-  createIncomeTransaction, 
+  createIncomeTransaction,
+  updateIncomeTransaction,
   deleteIncomeTransaction,
   getIncomeTotal,
   IncomeTransactionData 
@@ -29,6 +33,7 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
   const [total, setTotal] = useState('0')
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editing, setEditing] = useState<IncomeTransactionData | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -67,11 +72,17 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
       description: formData.get('description') as string,
       amount: formData.get('amount') as string,
       date: formData.get('date') as string,
+      category: formData.get('category') as string,
     }
 
     try {
-      await createIncomeTransaction(data)
+      if (editing) {
+        await updateIncomeTransaction(editing.id, data)
+      } else {
+        await createIncomeTransaction(data)
+      }
       setModalOpen(false)
+      setEditing(null)
       loadData()
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Erro ao registrar receita')
@@ -103,7 +114,7 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-stone-800">Receitas</h1>
+        <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">Receitas</h1>
         <MonthSelector currentMonth={currentMonth} />
       </div>
 
@@ -111,7 +122,7 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
       <Card className="mb-6">
         <div className="flex items-center justify-between">
           <CardStat label="Total do Mês" value={formatCurrency(total)} variant="success" />
-          <Button onClick={() => { setFormError(null); setModalOpen(true) }}>
+          <Button onClick={() => { setEditing(null); setFormError(null); setModalOpen(true) }}>
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -125,16 +136,16 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
         {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+              <div key={i} className="h-16 bg-gray-100 dark:bg-neutral-800 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : transactions.length === 0 ? (
           <div className="text-center py-12">
-            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 text-gray-300 dark:text-neutral-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="text-lg font-medium text-stone-800 mb-2">Nenhuma receita</h3>
-            <p className="text-stone-500 mb-4">Adicione sua primeira receita do mês.</p>
+            <h3 className="text-lg font-medium text-stone-800 dark:text-stone-100 mb-2">Nenhuma receita</h3>
+            <p className="text-stone-500 dark:text-stone-400 mb-4">Adicione sua primeira receita do mês.</p>
             <Button onClick={() => setModalOpen(true)}>Adicionar Receita</Button>
           </div>
         ) : (
@@ -142,26 +153,35 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
             {transactions.map((transaction) => (
               <div 
                 key={transaction.id} 
-                className="flex items-center justify-between p-3 bg-stone-50 dark:bg-neutral-900 rounded-lg group"
+                className="flex items-center justify-between gap-3 p-4 bg-stone-50 dark:bg-neutral-900 rounded-xl"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg">
                     <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-stone-800">{transaction.description}</p>
-                    <p className="text-xs text-stone-500">{formatDateDisplay(transaction.date)}</p>
+                    <p className="font-medium text-stone-800 dark:text-stone-100">{transaction.description}</p>
+                    <p className="text-xs text-stone-500 dark:text-stone-400">{transaction.category} · {formatDateDisplay(transaction.date)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-medium text-green-600">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-green-600 dark:text-green-400 tabular-nums">
                     +{formatCurrency(transaction.amount)}
                   </span>
                   <button
+                    onClick={() => { setEditing(transaction); setFormError(null); setModalOpen(true) }}
+                    className="p-1.5 hover:bg-stone-200 dark:hover:bg-neutral-700 rounded-md text-stone-500 dark:text-stone-300"
+                    title="Editar"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
                     onClick={() => handleDelete(transaction)}
-                    className="p-1.5 hover:bg-red-100 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-md"
                     title="Excluir"
                   >
                     <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,25 +199,34 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Nova Receita"
+        title={editing ? 'Editar receita' : 'Nova Receita'}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
+            <Button variant="secondary" onClick={() => { setModalOpen(false); setEditing(null) }}>
               Cancelar
             </Button>
             <Button type="submit" form="income-form" loading={submitting}>
-              Registrar
+              {editing ? 'Salvar' : 'Registrar'}
             </Button>
           </>
         }
       >
-        <form id="income-form" onSubmit={handleSubmit} className="space-y-4">
+        <form id="income-form" key={editing?.id || 'new'} onSubmit={handleSubmit} className="space-y-4">
           <Input
             id="description"
             name="description"
             label="Descrição"
             placeholder="Ex: Salário, Freelance..."
+            defaultValue={editing?.description || ''}
             required
+          />
+
+          <Select
+            id="category"
+            name="category"
+            label="Categoria"
+            defaultValue={editing?.category || 'Outros'}
+            options={INCOME_CATEGORIES.map(category => ({ value: category, label: category }))}
           />
 
           <Input
@@ -208,6 +237,7 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
             min="0.01"
             label="Valor"
             placeholder="0.00"
+            defaultValue={editing?.amount || ''}
             required
           />
 
@@ -216,7 +246,7 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
             name="date"
             type="date"
             label="Data"
-            defaultValue={new Date().toISOString().split('T')[0]}
+            defaultValue={editing ? new Date(editing.date).toISOString().slice(0, 10) : new Date().toISOString().split('T')[0]}
             required
           />
 
@@ -245,6 +275,7 @@ function IncomeContent({ isAdmin }: { isAdmin: boolean }) {
         variant="danger"
         loading={deleting}
       />
+      <RecurringPanel kind="income" categories={INCOME_CATEGORIES} />
     </>
   )
 }
@@ -257,14 +288,14 @@ export default function IncomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-900">
+    <div className="min-h-screen">
       <Navbar isAdmin={isAdmin} />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Suspense fallback={
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-48" />
-            <div className="h-24 bg-gray-200 rounded" />
-            <div className="h-64 bg-gray-200 rounded" />
+            <div className="h-8 bg-gray-200 dark:bg-neutral-800 rounded w-48" />
+            <div className="h-24 bg-gray-200 dark:bg-neutral-800 rounded" />
+            <div className="h-64 bg-gray-200 dark:bg-neutral-800 rounded" />
           </div>
         }>
           <IncomeContent isAdmin={isAdmin} />

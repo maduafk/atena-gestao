@@ -125,7 +125,7 @@ export default function CardsPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
+    <div className="min-h-screen">
       <Navbar isAdmin={isAdmin} />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
@@ -179,7 +179,7 @@ export default function CardsPage() {
                   {/* Card chip */}
                   <div className="flex items-start justify-between mb-8">
                     <div className="w-10 h-7 rounded bg-gradient-to-br from-amber-300 to-amber-500 shadow-sm" />
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1">
                       <button
                         onClick={(e) => {
                           e.preventDefault()

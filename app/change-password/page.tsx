@@ -67,14 +67,14 @@ export default function ChangePasswordPage() {
 
   if (checkingAccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-stone-50 dark:bg-neutral-950 transition-colors">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl p-8">
           {/* Header */}

@@ -152,14 +152,14 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50 dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 transition-colors">
+    <div className="min-h-screen">
       {/* Header */}
       <header className="bg-white dark:bg-neutral-900 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

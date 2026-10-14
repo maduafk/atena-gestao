@@ -5,10 +5,12 @@ import { verifySession } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { Decimal } from '@prisma/client/runtime/library'
 import { parseStatementMonth, parseLocalDate } from '@/lib/utils'
+import { generateRecurringForMonth } from '@/lib/actions/recurring'
 
 export interface DebitTransactionData {
   id: string
   description: string
+  category: string
   amount: string
   date: Date
   createdAt: Date
@@ -17,6 +19,8 @@ export interface DebitTransactionData {
 export async function getDebitTransactions(statementMonth: string): Promise<DebitTransactionData[]> {
   const session = await verifySession()
   if (!session) throw new Error('Não autorizado')
+
+  await generateRecurringForMonth(statementMonth)
 
   const monthDate = parseStatementMonth(statementMonth)
   const nextMonth = new Date(monthDate)
@@ -36,6 +40,7 @@ export async function getDebitTransactions(statementMonth: string): Promise<Debi
   return transactions.map(t => ({
     id: t.id,
     description: t.description,
+    category: t.category,
     amount: t.amount.toString(),
     date: t.date,
     createdAt: t.createdAt,
@@ -46,6 +51,7 @@ export interface CreateDebitInput {
   description: string
   amount: string
   date: string
+  category?: string
 }
 
 export async function createDebitTransaction(data: CreateDebitInput) {
@@ -60,6 +66,7 @@ export async function createDebitTransaction(data: CreateDebitInput) {
     data: {
       userId: session.userId,
       description: data.description,
+      category: data.category || 'Outros',
       amount: new Decimal(data.amount),
       date: parseLocalDate(data.date),
     },
@@ -69,6 +76,33 @@ export async function createDebitTransaction(data: CreateDebitInput) {
   revalidatePath('/')
 
   return transaction
+}
+
+export async function updateDebitTransaction(id: string, data: CreateDebitInput) {
+  const session = await verifySession()
+  if (!session) throw new Error('Não autorizado')
+
+  if (!data.description || !data.amount) {
+    throw new Error('Descrição e valor são obrigatórios')
+  }
+
+  const transaction = await prisma.debitTransaction.findFirst({
+    where: { id, userId: session.userId },
+  })
+  if (!transaction) throw new Error('Transação não encontrada')
+
+  await prisma.debitTransaction.update({
+    where: { id },
+    data: {
+      description: data.description,
+      category: data.category || 'Outros',
+      amount: new Decimal(data.amount),
+      date: parseLocalDate(data.date),
+    },
+  })
+
+  revalidatePath('/debit')
+  revalidatePath('/')
 }
 
 export async function deleteDebitTransaction(id: string) {

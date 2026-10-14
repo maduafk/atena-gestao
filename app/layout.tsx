@@ -1,8 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Atena - Gestão Financeira',
@@ -20,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.className} bg-stone-50 dark:bg-neutral-950 transition-colors`}>
+      <body className={`${jakarta.className} app-shell`}>
         {children}
       </body>
     </html>

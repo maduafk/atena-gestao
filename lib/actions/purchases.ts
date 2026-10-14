@@ -37,6 +37,7 @@ export interface CreatePurchaseInput {
   amountTotal: string
   purchaseDate: string
   installments: number
+  category?: string
 }
 
 export async function createPurchase(data: CreatePurchaseInput) {
@@ -142,6 +143,7 @@ export async function createPurchase(data: CreatePurchaseInput) {
         userId: session.userId,
         cardId: data.cardId,
         description: data.description,
+        category: data.category || 'Outros',
         amountTotal: new Decimal(data.amountTotal),
         purchaseDate,
         installments: data.installments,
@@ -224,6 +226,52 @@ export async function getInstallmentsForStatement(
     purchaseDate: inst.purchase.purchaseDate,
     totalInstallments: inst.purchase.installments,
   }))
+}
+
+export async function updatePurchaseDescription(purchaseId: string, description: string) {
+  const session = await verifySession()
+  if (!session) throw new Error('Não autorizado')
+
+  const trimmed = description.trim()
+  if (!trimmed) throw new Error('Descrição é obrigatória')
+
+  const purchase = await prisma.cardPurchase.findFirst({
+    where: { id: purchaseId, userId: session.userId },
+  })
+  if (!purchase) throw new Error('Compra não encontrada')
+
+  await prisma.cardPurchase.update({
+    where: { id: purchaseId },
+    data: { description: trimmed },
+  })
+
+  revalidatePath(`/cards/${purchase.cardId}`)
+  revalidatePath('/')
+}
+
+export async function getCardAvailability(cardId: string) {
+  const session = await verifySession()
+  if (!session) throw new Error('Não autorizado')
+
+  const card = await prisma.card.findFirst({
+    where: { id: cardId, userId: session.userId },
+  })
+  if (!card) throw new Error('Cartão não encontrado')
+
+  const openInstallments = await prisma.cardInstallment.aggregate({
+    where: { cardId, userId: session.userId, status: 'open' },
+    _sum: { amount: true },
+  })
+
+  const limit = new DecimalJS(card.creditLimit.toString())
+  const used = new DecimalJS(openInstallments._sum.amount?.toString() || '0')
+  const available = DecimalJS.max(limit.minus(used), 0)
+
+  return {
+    limit: limit.toString(),
+    used: used.toString(),
+    available: available.toString(),
+  }
 }
 
 export async function deletePurchase(purchaseId: string) {

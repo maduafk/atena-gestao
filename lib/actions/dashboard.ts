@@ -2,12 +2,15 @@
 
 import { prisma } from '@/lib/db'
 import { verifySession } from '@/lib/auth'
+import { getMonthCharges } from '@/lib/actions/charges'
+import { generateRecurringForMonth } from '@/lib/actions/recurring'
 import { parseStatementMonth, getClosingDate, getDueDate, formatStatementMonth, getCurrentStatementMonthForCard } from '@/lib/utils'
 import DecimalJS from 'decimal.js'
 
 export interface CardSummary {
   id: string
   name: string
+  color: string
   statementTotal: string
   paidTotal: string
   openTotal: string
@@ -106,6 +109,8 @@ export async function getDashboardData(statementMonth: string): Promise<Dashboar
   const session = await verifySession()
   if (!session) throw new Error('Não autorizado')
 
+  await generateRecurringForMonth(statementMonth)
+
   const monthDate = parseStatementMonth(statementMonth)
   const nextMonth = new Date(monthDate)
   nextMonth.setMonth(nextMonth.getMonth() + 1)
@@ -151,6 +156,7 @@ export async function getDashboardData(statementMonth: string): Promise<Dashboar
     cardSummaries.push({
       id: card.id,
       name: card.name,
+      color: card.color,
       statementTotal: statementTotal.toString(),
       paidTotal: paidTotal.toString(),
       openTotal: openTotal.toString(),
@@ -617,170 +623,50 @@ export async function getRecommendedStatementMonth(): Promise<string> {
   return formatStatementMonth(statementMonth)
 }
 
-export interface LoanExportRow {
-  pessoa: string
-  descricao: string
-  cartao: string
-  valorTotal: string
-  valorRestante: string
-  parcelaAtual: string
-  totalParcelas: string
-  valorParcela: string
-  status: string
+export interface PersonBillRow {
+  description: string
+  origin: string
+  installment: string
+  amount: string
+  note: string
 }
 
-export interface LoanExportData {
+export interface PersonBillData {
   borrowerName: string
   statementMonth: string
   generatedAt: string
-  rows: LoanExportRow[]
-  totals: {
-    totalGeral: string
-    totalRestante: string
-    totalMes: string
-  }
-  // Receivables data
-  receivables: {
-    rows: ReceivableExportRow[]
-    totalPendente: string
-  }
-}
-
-export interface ReceivableExportRow {
-  descricao: string
-  categoria: string
-  valorTotal: string
-  valorPago: string
-  valorRestante: string
-  dataVencimento: string
-  status: string
+  rows: PersonBillRow[]
+  totalMes: string
 }
 
 /**
- * Exporta dados de empréstimos E A RECEBER de UMA PESSOA específica
- * Retorna dados estruturados para geração de PDF
+ * Cobrança do mês de uma pessoa: parcelas que vencem no mês
+ * mais parcelas antigas marcadas como não pagas.
  */
-export async function exportLoansByBorrower(borrowerName: string, statementMonth: string): Promise<LoanExportData> {
+export async function exportLoansByBorrower(borrowerName: string, statementMonth: string): Promise<PersonBillData> {
   const session = await verifySession()
   if (!session) throw new Error('Não autorizado')
 
-  const monthDate = parseStatementMonth(statementMonth)
+  const charges = await getMonthCharges(statementMonth)
+  const personCharges = charges.filter(charge => charge.personName.toLowerCase() === borrowerName.toLowerCase())
 
-  // Buscar todos os empréstimos desta pessoa (todos os cartões)
-  const loans = await prisma.cardLoan.findMany({
-    where: {
-      userId: session.userId,
-      borrowerName: borrowerName,
-      status: { not: 'paid' },
-    },
-    include: {
-      card: { select: { name: true } },
-    },
-    orderBy: { loanDate: 'desc' },
-  })
-
-  // Buscar compras de empréstimo desta pessoa
-  const loanPurchases = await prisma.cardPurchase.findMany({
-    where: {
-      userId: session.userId,
-      description: { contains: borrowerName },
-    },
-    include: {
-      card: { select: { name: true } },
-      cardInstallments: {
-        where: { statementMonth: monthDate },
-      },
-    },
-  })
-
-  // Buscar receivables desta pessoa (case insensitive)
-  const receivables = await prisma.receivable.findMany({
-    where: {
-      userId: session.userId,
-      personName: { equals: borrowerName, mode: 'insensitive' },
-      status: { not: 'paid' },
-    },
-    orderBy: { dueDate: 'asc' },
-  })
-
-  // Montar linhas de empréstimos
-  const rows: LoanExportRow[] = []
-  let totalGeral = new DecimalJS(0)
-  let totalRestante = new DecimalJS(0)
   let totalMes = new DecimalJS(0)
-
-  for (const loan of loans) {
-    // Encontrar a compra correspondente para pegar info de parcelas
-    const matchingPurchase = loanPurchases.find(p => 
-      p.cardId === loan.cardId &&
-      p.description.includes(loan.borrowerName) &&
-      p.description.toLowerCase().includes(loan.description.toLowerCase().substring(0, 10))
-    )
-
-    const currentInstallment = matchingPurchase?.cardInstallments[0]
-    const totalInstallments = matchingPurchase?.installments || 1
-    const installmentNumber = currentInstallment?.installmentNumber || '-'
-    
-    const valorTotal = new DecimalJS(loan.amount.toString())
-    const valorPago = new DecimalJS(loan.paidAmount.toString())
-    const valorRestante = valorTotal.minus(valorPago)
-    const valorParcela = currentInstallment ? new DecimalJS(currentInstallment.amount.toString()) : new DecimalJS(0)
-
-    totalGeral = totalGeral.plus(valorTotal)
-    totalRestante = totalRestante.plus(valorRestante)
-    if (currentInstallment) {
-      totalMes = totalMes.plus(valorParcela)
+  const rows: PersonBillRow[] = personCharges.map(charge => {
+    totalMes = totalMes.plus(charge.amount)
+    return {
+      description: charge.description,
+      origin: charge.origin,
+      installment: charge.installmentLabel,
+      amount: new DecimalJS(charge.amount).toFixed(2),
+      note: charge.carried ? `Não pago de ${charge.originLabel}` : 'Deste mês',
     }
+  })
 
-    rows.push({
-      pessoa: loan.borrowerName,
-      descricao: loan.description,
-      cartao: loan.card.name,
-      valorTotal: valorTotal.toFixed(2),
-      valorRestante: valorRestante.toFixed(2),
-      parcelaAtual: String(installmentNumber),
-      totalParcelas: String(totalInstallments),
-      valorParcela: currentInstallment ? valorParcela.toFixed(2) : '-',
-      status: loan.status === 'pending' ? 'Pendente' : loan.status === 'partial' ? 'Parcial' : 'Pago',
-    })
-  }
-
-  // Montar linhas de receivables
-  const receivableRows: ReceivableExportRow[] = []
-  let totalReceivablesPendente = new DecimalJS(0)
-
-  for (const rec of receivables) {
-    const valorTotal = new DecimalJS(rec.amountTotal.toString())
-    const valorPago = new DecimalJS(rec.paidAmount.toString())
-    const valorRestante = valorTotal.minus(valorPago)
-
-    totalReceivablesPendente = totalReceivablesPendente.plus(valorRestante)
-
-    receivableRows.push({
-      descricao: rec.description,
-      categoria: rec.category || '-',
-      valorTotal: valorTotal.toFixed(2),
-      valorPago: valorPago.toFixed(2),
-      valorRestante: valorRestante.toFixed(2),
-      dataVencimento: rec.dueDate ? rec.dueDate.toLocaleDateString('pt-BR') : '-',
-      status: rec.status === 'pending' ? 'Pendente' : rec.status === 'partial' ? 'Parcial' : 'Pago',
-    })
-  }
-
-  // Gerar dados estruturados para PDF
   return {
     borrowerName,
     statementMonth,
     generatedAt: new Date().toLocaleDateString('pt-BR'),
     rows,
-    totals: {
-      totalGeral: totalGeral.toFixed(2),
-      totalRestante: totalRestante.toFixed(2),
-      totalMes: totalMes.toFixed(2),
-    },
-    receivables: {
-      rows: receivableRows,
-      totalPendente: totalReceivablesPendente.toFixed(2),
-    }
+    totalMes: totalMes.toFixed(2),
   }
 }

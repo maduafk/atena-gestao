@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { decrypt } from '@/lib/auth'
 
-const protectedRoutes = ['/', '/cards', '/debit', '/income', '/settings', '/logout']
+const protectedRoutes = ['/', '/cards', '/debit', '/income', '/receivables', '/reports', '/settings', '/logout']
 const adminRoutes = ['/admin']
 const publicRoutes = ['/login']
 const changePasswordRoute = '/change-password'

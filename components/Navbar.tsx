@@ -22,6 +22,7 @@ export default function Navbar({ isAdmin = false }: NavbarProps) {
   const pathname = usePathname()
 
   return (
+    <>
     <nav className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-lg border-b border-stone-200/50 dark:border-neutral-800/50 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
@@ -102,33 +103,33 @@ export default function Navbar({ isAdmin = false }: NavbarProps) {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-1 pb-3 overflow-x-auto scrollbar-hide">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || 
-              (item.href !== '/' && pathname.startsWith(item.href))
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all
-                  ${isActive 
-                    ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' 
-                    : 'text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-neutral-800'
-                  }
-                `}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
-                </svg>
-                {item.label}
-              </Link>
-            )
-          })}
-        </div>
       </div>
     </nav>
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-stone-200/70 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-lg">
+      <div className="grid grid-cols-5">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href ||
+            (item.href !== '/' && pathname.startsWith(item.href))
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
+                isActive
+                  ? 'text-primary-700 dark:text-primary-300'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
+              </svg>
+              {item.label}
+            </Link>
+          )
+        })}
+      </div>
+    </nav>
+    </>
   )
 }

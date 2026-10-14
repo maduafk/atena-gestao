@@ -6,8 +6,13 @@ import Card, { CardStat } from '@/components/ui/Card'
 import ActivityList from '@/components/ActivityList'
 import ExportLoansButton from '@/components/ExportLoansButton'
 import { getDashboardData, getRecommendedStatementMonth } from '@/lib/actions/dashboard'
-import { getReceivablesSummaryByPerson, ReceivableSummaryByPerson } from '@/lib/actions/receivables'
-import { formatCurrency, formatStatementMonth, formatDateDisplay, parseStatementMonth } from '@/lib/utils'
+import { getReceivablesSummaryByPerson } from '@/lib/actions/receivables'
+import { getMonthCharges } from '@/lib/actions/charges'
+import { getCategoryTotals } from '@/lib/actions/reports'
+import { getMonthlyBudget } from '@/lib/actions/budget'
+import PersonCharges from '@/components/PersonCharges'
+import BudgetCard from '@/components/BudgetCard'
+import { formatCurrency, formatDateDisplay } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
 import Link from 'next/link'
 
@@ -25,11 +30,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const currentMonth = params.month || recommendedMonth
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 transition-colors">
+    <div className="min-h-screen">
       <Navbar isAdmin={session?.isAdmin} />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">Dashboard</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-stone-800 dark:text-stone-100">Dashboard</h1>
+            <Link href="/reports" className="text-sm text-primary-600 dark:text-primary-400 font-medium">Ver o ano</Link>
+          </div>
           <Suspense fallback={<div className="h-10 w-48 bg-gray-200 dark:bg-neutral-800 rounded-lg animate-pulse" />}>
             <MonthSelector currentMonth={currentMonth} />
           </Suspense>
@@ -44,67 +52,58 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 }
 
 async function DashboardContent({ month }: { month: string }) {
-  const [data, receivablesSummary] = await Promise.all([
+  const [data, receivablesSummary, monthCharges, categories, budget] = await Promise.all([
     getDashboardData(month),
     getReceivablesSummaryByPerson(),
+    getMonthCharges(month),
+    getCategoryTotals(month),
+    getMonthlyBudget(month),
   ])
   
-  // Check if this is a past month (before current month)
-  const monthDate = parseStatementMonth(month)
-  const now = new Date()
-  const currentMonthDate = new Date(now.getFullYear(), now.getMonth(), 1)
-  const isPastMonth = monthDate < currentMonthDate
-
   return (
     <div className="space-y-6">
       {/* Summary Cards - Only show full summary for current/future months */}
-      {isPastMonth ? (
-        // Simplified view for past months - only card spending
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="col-span-1">
-            <CardStat label="Gastos Cartão" value={formatCurrency(data.totalCreditSpending)} variant="danger" />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat label="Pago Cartões" value={formatCurrency(data.totalPaidTowardsCards)} variant="success" />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat label="Em Aberto" value={formatCurrency(data.totalOpenOnCards)} variant="warning" />
-          </Card>
-        </div>
-      ) : (
-        // Full summary for current/future months
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          <Card className="col-span-1">
-            <CardStat label="Gastos Cartão" value={formatCurrency(data.totalCreditSpending)} variant="danger" />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat label="Pago Cartões" value={formatCurrency(data.totalPaidTowardsCards)} variant="success" />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat label="Em Aberto" value={formatCurrency(data.totalOpenOnCards)} variant="warning" />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat label="Gastos Débito" value={formatCurrency(data.totalDebitSpending)} variant="danger" />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat label="Receitas" value={formatCurrency(data.totalIncome)} variant="success" />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat 
-              label="Saldo Mês" 
-              value={formatCurrency(data.balance)} 
-              variant={Number(data.balance) >= 0 ? 'success' : 'danger'} 
-            />
-          </Card>
-          <Card className="col-span-1">
-            <CardStat 
-              label="Saldo Total" 
-              value={formatCurrency(data.accumulatedBalance)} 
-              variant={Number(data.accumulatedBalance) >= 0 ? 'success' : 'danger'} 
-            />
-          </Card>
-        </div>
-      )}
+      <Card>
+        <p className="text-sm font-medium text-stone-500 dark:text-stone-400">Saldo do mês</p>
+        <p className={`mt-1 text-4xl font-semibold tracking-tight tabular-nums ${Number(data.balance) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+          {formatCurrency(data.balance)}
+        </p>
+        <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+          Saldo total{' '}
+          <span className={`font-semibold tabular-nums ${Number(data.accumulatedBalance) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+            {formatCurrency(data.accumulatedBalance)}
+          </span>
+        </p>
+      </Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <Card><CardStat label="Receitas" value={formatCurrency(data.totalIncome)} variant="success" /></Card>
+        <Card><CardStat label="Gastos Cartão" value={formatCurrency(data.totalCreditSpending)} variant="danger" /></Card>
+        <Card><CardStat label="Gastos Débito" value={formatCurrency(data.totalDebitSpending)} variant="danger" /></Card>
+        <Card><CardStat label="Pago Cartões" value={formatCurrency(data.totalPaidTowardsCards)} variant="success" /></Card>
+        <Card className="col-span-2 md:col-span-1"><CardStat label="Em Aberto" value={formatCurrency(data.totalOpenOnCards)} variant="warning" /></Card>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <BudgetCard
+          month={month}
+          budget={budget}
+          spent={Number(data.totalCreditSpending) + Number(data.totalDebitSpending)}
+        />
+        <Card title="Por categoria" subtitle="Cartão e débito deste mês">
+          {categories.length === 0 ? (
+            <p className="text-sm text-stone-500 dark:text-stone-400">Nenhum gasto neste mês.</p>
+          ) : (
+            <div className="space-y-2">
+              {categories.map(item => (
+                <div key={item.category} className="flex items-center justify-between text-sm">
+                  <span className="text-stone-700 dark:text-stone-200">{item.category}</span>
+                  <span className="tabular-nums font-medium text-stone-800 dark:text-stone-100">{formatCurrency(item.amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
 
       {/* Cards Section */}
       <div>
@@ -134,7 +133,7 @@ async function DashboardContent({ month }: { month: string }) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.cards.map((card) => (
               <Link key={card.id} href={`/cards/${card.id}?month=${month}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card accentColor={card.color} className="hover:shadow-soft-lg cursor-pointer h-full">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-stone-800 dark:text-stone-100">{card.name}</h3>
                     <span className={`text-xs px-2 py-1 rounded-full ${
@@ -148,15 +147,15 @@ async function DashboardContent({ month }: { month: string }) {
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div>
                       <p className="text-stone-500 dark:text-stone-400">Fatura</p>
-                      <p className="font-medium text-stone-800 dark:text-stone-100">{formatCurrency(card.statementTotal)}</p>
+                      <p className="font-medium text-stone-800 dark:text-stone-100 tabular-nums">{formatCurrency(card.statementTotal)}</p>
                     </div>
                     <div>
                       <p className="text-stone-500 dark:text-stone-400">Pago</p>
-                      <p className="font-medium text-green-600 dark:text-green-400">{formatCurrency(card.paidTotal)}</p>
+                      <p className="font-medium text-green-600 dark:text-green-400 tabular-nums">{formatCurrency(card.paidTotal)}</p>
                     </div>
                     <div>
                       <p className="text-stone-500 dark:text-stone-400">Aberto</p>
-                      <p className="font-medium text-yellow-600 dark:text-yellow-400">{formatCurrency(card.openTotal)}</p>
+                      <p className="font-medium text-yellow-600 dark:text-yellow-400 tabular-nums">{formatCurrency(card.openTotal)}</p>
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-stone-100 dark:border-neutral-800 dark:border-neutral-800 text-xs text-stone-500 dark:text-stone-400">
@@ -176,17 +175,32 @@ async function DashboardContent({ month }: { month: string }) {
         const receivablesMap = new Map(receivablesSummary.map(r => [r.personName.toLowerCase(), r]))
         
         // Get all unique person names
+        const chargesByPerson = new Map<string, typeof monthCharges>()
+        for (const charge of monthCharges) {
+          const key = charge.personName.toLowerCase()
+          const list = chargesByPerson.get(key) || []
+          list.push(charge)
+          chargesByPerson.set(key, list)
+        }
+
         const allPersons = new Set([
           ...(data.loansSummary?.map(l => l.borrowerName) || []),
-          ...receivablesSummary.map(r => r.personName)
+          ...receivablesSummary.map(r => r.personName),
         ])
+        const knownPersons = new Set(Array.from(allPersons).map(name => name.toLowerCase()))
+        for (const charge of monthCharges) {
+          if (!knownPersons.has(charge.personName.toLowerCase())) {
+            allPersons.add(charge.personName)
+            knownPersons.add(charge.personName.toLowerCase())
+          }
+        }
         
         // Calculate combined totals
         const totalReceivablesAmount = receivablesSummary.reduce((sum, r) => sum + Number(r.pendingAmount), 0)
         const totalLoansOwed = Number(data.totalLoansOwed || 0)
         const totalAReceber = totalLoansOwed + totalReceivablesAmount
         
-        if (allPersons.size === 0 || !data.loansEnabled) return null
+        if (allPersons.size === 0) return null
         
         return (
           <Card 
@@ -195,22 +209,26 @@ async function DashboardContent({ month }: { month: string }) {
           >
             <div className="space-y-4">
               {/* Summary */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <div className={`grid grid-cols-2 ${data.loansEnabled ? 'md:grid-cols-4' : 'md:grid-cols-2'} gap-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg`}>
+                {data.loansEnabled && (
+                  <div>
+                    <p className="text-sm text-stone-500 dark:text-stone-400">Total Empréstimos</p>
+                    <p className="text-lg font-bold text-stone-800 dark:text-stone-100 tabular-nums">{formatCurrency(data.totalLoansOwed || '0')}</p>
+                  </div>
+                )}
                 <div>
-                  <p className="text-sm text-stone-500 dark:text-stone-400">Total Empréstimos</p>
-                  <p className="text-lg font-bold text-stone-800 dark:text-stone-100">{formatCurrency(data.totalLoansOwed || '0')}</p>
+                  <p className="text-sm text-stone-500 dark:text-stone-400">{data.loansEnabled ? 'Total Outros' : 'A Receber'}</p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400 tabular-nums">{formatCurrency(totalReceivablesAmount.toString())}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-stone-500 dark:text-stone-400">Total Outros</p>
-                  <p className="text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(totalReceivablesAmount.toString())}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-stone-500 dark:text-stone-400">Empréstimos Este Mês</p>
-                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{formatCurrency(data.totalLoansThisMonth || '0')}</p>
-                </div>
+                {data.loansEnabled && (
+                  <div>
+                    <p className="text-sm text-stone-500 dark:text-stone-400">Empréstimos Este Mês</p>
+                    <p className="text-lg font-bold text-orange-600 dark:text-orange-400 tabular-nums">{formatCurrency(data.totalLoansThisMonth || '0')}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-stone-500 dark:text-stone-400">Total Geral</p>
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalAReceber.toString())}</p>
+                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400 tabular-nums">{formatCurrency(totalAReceber.toString())}</p>
                 </div>
               </div>
 
@@ -219,8 +237,9 @@ async function DashboardContent({ month }: { month: string }) {
                 {Array.from(allPersons).map((personName) => {
                   const loan = loansMap.get(personName.toLowerCase())
                   const receivable = receivablesMap.get(personName.toLowerCase())
+                  const personCharges = chargesByPerson.get(personName.toLowerCase()) || []
                   const totalPerson = Number(loan?.totalOwed || 0) + Number(receivable?.pendingAmount || 0)
-                  const monthAmount = Number(loan?.monthAmount || 0)
+                  const monthAmount = personCharges.reduce((sum, charge) => sum + Number(charge.amount), 0)
                   
                   return (
                     <div 
@@ -238,7 +257,7 @@ async function DashboardContent({ month }: { month: string }) {
                               {loan && <span>{loan.loanCount} empréstimo(s)</span>}
                               {loan && receivable && <span> • </span>}
                               {receivable && <span>{receivable.receivableCount} a receber</span>}
-                              <span> • Total: {formatCurrency(totalPerson.toString())}</span>
+                              {totalPerson > 0 && <span> • Saldo total: {formatCurrency(totalPerson.toString())}</span>}
                             </p>
                           </div>
                         </div>
@@ -249,7 +268,7 @@ async function DashboardContent({ month }: { month: string }) {
                                 <p className="font-bold text-orange-600 dark:text-orange-400">
                                   {formatCurrency(monthAmount.toString())}
                                 </p>
-                                <p className="text-xs text-stone-500 dark:text-stone-400">parcelas este mês</p>
+                                <p className="text-xs text-stone-500 dark:text-stone-400">a cobrar neste mês</p>
                               </>
                             ) : (
                               <p className="text-sm text-stone-400 dark:text-stone-500">
@@ -262,50 +281,7 @@ async function DashboardContent({ month }: { month: string }) {
                         </div>
                       </div>
                       
-                      {/* Loan Card Details */}
-                      {loan?.cardDetails && loan.cardDetails.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-stone-200 dark:border-neutral-800 space-y-2">
-                          <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-2">Empréstimos (Cartão)</p>
-                          {loan.cardDetails.map((detail, idx) => (
-                            <div 
-                              key={idx} 
-                              className="flex items-center justify-between text-sm bg-white dark:bg-neutral-800/50 p-2 rounded"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded">
-                                  {detail.cardName}
-                                </span>
-                                <span className="text-gray-600 dark:text-stone-300 truncate max-w-[150px]">
-                                  {detail.loanDescription || 'Empréstimo'}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs">
-                                <span className="text-stone-500 dark:text-stone-400">
-                                  Parcela {detail.currentInstallment}/{detail.totalInstallments}
-                                </span>
-                                <span className="font-medium text-orange-600 dark:text-orange-400">
-                                  {formatCurrency(detail.monthAmount)}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Receivables Details */}
-                      {receivable && (
-                        <div className={`${loan?.cardDetails?.length ? 'mt-2' : 'mt-3 pt-3 border-t border-stone-200 dark:border-neutral-800'} space-y-2`}>
-                          <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-2">Outros A Receber</p>
-                          <div className="flex items-center justify-between text-sm bg-green-50 dark:bg-green-900/30 p-2 rounded">
-                            <span className="text-gray-600 dark:text-stone-300">
-                              {receivable.receivableCount} item(s) pendente(s)
-                            </span>
-                            <span className="font-medium text-green-600 dark:text-green-400">
-                              {formatCurrency(receivable.pendingAmount)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
+                      <PersonCharges charges={personCharges} />
                     </div>
                   )
                 })}
@@ -323,30 +299,11 @@ async function DashboardContent({ month }: { month: string }) {
         )
       })()}
 
-      {/* Recent Activity - Only for current/future months */}
-      {!isPastMonth && (
-        <Card title="Atividade Recente" subtitle="Últimas 10 transações">
-          <ActivityList activities={data.recentActivity} />
-        </Card>
-      )}
+      <Card title="Atividade Recente" subtitle="Últimas 10 transações">
+        <ActivityList activities={data.recentActivity} />
+      </Card>
 
-      {/* Month Spreadsheet - Only for current/future months */}
-      {!isPastMonth && (
-        <MonthSpreadsheet month={month} />
-      )}
-
-      {/* Past month notice */}
-      {isPastMonth && (
-        <Card>
-          <div className="text-center py-6 text-stone-500 dark:text-stone-400">
-            <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="font-medium">Mês passado</p>
-            <p className="text-sm mt-1">Apenas gastos de cartão são exibidos para meses anteriores.</p>
-          </div>
-        </Card>
-      )}
+      <MonthSpreadsheet month={month} />
     </div>
   )
 }

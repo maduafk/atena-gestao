@@ -36,7 +36,7 @@ fi
 echo "🔄 Restaurando backup..."
 
 # Descomprimir e restaurar
-gunzip -c "$BACKUP_FILE" | docker exec -i postgres psql -U postgres -d atena-db
+gunzip -c "$BACKUP_FILE" | docker exec -i atena-postgres psql -U postgres -d atena-db
 
 if [ $? -eq 0 ]; then
     echo "✅ Backup restaurado com sucesso!"
