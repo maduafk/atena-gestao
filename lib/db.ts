@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client'
-import { unwrapDatabaseUrl } from './database-url'
+import { runtimeDatabaseUrl } from './database-url'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-const databaseUrl = unwrapDatabaseUrl(process.env.DATABASE_URL)
+const databaseUrl = runtimeDatabaseUrl(process.env.DATABASE_URL)
 
 export const prisma =
   globalForPrisma.prisma ??

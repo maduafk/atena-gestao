@@ -28,6 +28,10 @@ function outputOf(result) {
   return `${result.stdout || ''}\n${result.stderr || ''}`
 }
 
+function sleep(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+}
+
 function finish(result, message) {
   if (result.error) {
     console.error(message)
@@ -69,11 +73,21 @@ process.env.DATABASE_URL = runtimeUrl
 finish(run(['prisma', 'generate']), 'prisma generate falhou. O banco não foi alterado.')
 
 process.env.DATABASE_URL = directDatabaseUrl(runtimeUrl)
-const status = run(['prisma', 'migrate', 'status'], { capture: true })
-const statusText = outputOf(status)
-console.log(redact(statusText))
+let statusText = ''
+for (let attempt = 1; attempt <= 5; attempt += 1) {
+  const status = run(['prisma', 'migrate', 'status'], { capture: true })
+  statusText = outputOf(status)
+  console.log(redact(statusText))
+  if (!/P1001|Can't reach database server/i.test(statusText)) break
+  if (attempt === 5) {
+    console.error('Não conectei no banco para migrar. Nada foi alterado.')
+    process.exit(1)
+  }
+  console.log(`O banco não respondeu. Nova tentativa ${attempt + 1} de 5.`)
+  sleep(5000)
+}
 
-if (/P1001|P1012|P1000|Can't reach database server|Authentication failed/i.test(statusText)) {
+if (/P1012|P1000|Authentication failed/i.test(statusText)) {
   console.error('Não conectei no banco para migrar. Nada foi alterado.')
   process.exit(1)
 }
